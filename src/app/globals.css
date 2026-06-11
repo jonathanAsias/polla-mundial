@@ -8,6 +8,25 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .scoreboard-flip {
+    animation: scoreboard-flip 0.3s ease-in-out;
+  }
+}
+
+@keyframes scoreboard-flip {
+  0% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: rotateX(-90deg);
+    opacity: 0.3;
+  }
+  100% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
 }
 
 @layer base {

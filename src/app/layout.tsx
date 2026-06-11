@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Inter, JetBrains_Mono } from "next/font/google";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -34,7 +35,7 @@ export default function RootLayout({
       <body
         className={`${bebasNeue.variable} ${inter.variable} ${jetbrainsMono.variable} min-h-screen`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
