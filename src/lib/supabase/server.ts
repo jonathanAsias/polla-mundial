@@ -28,8 +28,9 @@ export async function createClient() {
   );
 }
 
+/** Cliente con service_role — bypass RLS para cron/sync. Sin tipos estrictos. */
 export function createServiceClient() {
-  return createSupabaseClient<Database>(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
