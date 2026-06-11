@@ -52,6 +52,10 @@ export interface Prediction {
 
 export interface Database {
   public: {
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
     Tables: {
       profiles: {
         Row: Profile;
@@ -60,11 +64,13 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Omit<Profile, "id">>;
+        Relationships: [];
       };
       teams: {
         Row: Team;
         Insert: Omit<Team, "id"> & { id?: number };
         Update: Partial<Omit<Team, "id">>;
+        Relationships: [];
       };
       matches: {
         Row: Match;
@@ -73,6 +79,7 @@ export interface Database {
           status?: MatchStatus;
         };
         Update: Partial<Omit<Match, "id">>;
+        Relationships: [];
       };
       predictions: {
         Row: Prediction;
@@ -82,6 +89,7 @@ export interface Database {
           points_earned?: number;
         };
         Update: Partial<Omit<Prediction, "id">>;
+        Relationships: [];
       };
     };
   };
