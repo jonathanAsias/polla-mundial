@@ -1,5 +1,6 @@
 import type { MatchWithTeams } from "@/lib/queries/matches";
-import { getMatchDisplayName } from "@/lib/match-display";
+import { getMatchTeams } from "@/lib/match-display";
+import { TeamFlag } from "@/components/teams/team-flag";
 
 const STATUS_ICON: Record<string, string> = {
   upcoming: "🟡",
@@ -12,7 +13,7 @@ interface MatchRowProps {
 }
 
 export function MatchRow({ match }: MatchRowProps) {
-  const names = getMatchDisplayName(match);
+  const { home, away, isKnockoutPlaceholder } = getMatchTeams(match);
   const date = new Date(match.scheduled_at);
   const timeStr = date.toLocaleString("es", {
     day: "numeric",
@@ -33,29 +34,31 @@ export function MatchRow({ match }: MatchRowProps) {
       </span>
 
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          {names.away ? (
-            <>
-              <span className="text-xl">{match.home_team.flag_emoji}</span>
+        {isKnockoutPlaceholder ? (
+          <p className="font-display text-base text-blanco-linea">
+            {away ? `${home} vs ${away}` : home}
+          </p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <TeamFlag code={match.home_team.code} size="sm" />
               <span className="font-display text-base text-blanco-linea">
-                {names.home}
+                {home}
               </span>
-              <span className="font-mono text-dorado-copa">
-                {hasScore
-                  ? `${match.home_score} - ${match.away_score}`
-                  : "vs"}
-              </span>
-              <span className="font-display text-base text-blanco-linea">
-                {names.away}
-              </span>
-              <span className="text-xl">{match.away_team.flag_emoji}</span>
-            </>
-          ) : (
-            <span className="font-display text-base text-blanco-linea">
-              {names.home}
+            </div>
+            <span className="font-mono text-dorado-copa">
+              {hasScore
+                ? `${match.home_score} - ${match.away_score}`
+                : "vs"}
             </span>
-          )}
-        </div>
+            <div className="flex items-center gap-2">
+              <span className="font-display text-base text-blanco-linea">
+                {away}
+              </span>
+              <TeamFlag code={match.away_team.code} size="sm" />
+            </div>
+          </div>
+        )}
         <p className="mt-1 text-xs text-blanco-linea/50">
           {timeStr}
           {match.city && ` · ${match.city}`}

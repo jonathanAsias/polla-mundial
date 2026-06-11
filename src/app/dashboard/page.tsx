@@ -4,9 +4,9 @@ import { MatchCard } from "@/components/match/match-card";
 import { RankingWidget } from "@/components/ranking/ranking-widget";
 import {
   getDashboardMatches,
-  getTopRanking,
   getUserPredictionsForMatches,
 } from "@/lib/queries/dashboard";
+import { getRanking } from "@/lib/queries/ranking";
 import { createClient } from "@/lib/supabase/server";
 import { isSameCalendarDay } from "@/lib/predictions";
 
@@ -27,7 +27,7 @@ export default async function DashboardPage() {
       .eq("id", user.id)
       .single<{ username: string; total_points: number }>(),
     getDashboardMatches(),
-    getTopRanking(10),
+    getRanking(10),
   ]);
 
   const profile = profileRes.data;

@@ -41,7 +41,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
-        border: "hsl(var(--border))",
+        border: "hsl(var(--border) / 0.2)",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         "verde-cancha": "#1A6B2F",

@@ -10,6 +10,8 @@ import {
 import { CountdownTimer } from "@/components/match/countdown-timer";
 import { PredictionForm } from "@/components/match/prediction-form";
 import { ScoreboardDigit } from "@/components/match/scoreboard-digit";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { PointsConfetti } from "@/components/match/points-confetti";
 
 interface MatchCardProps {
   match: MatchWithTeams;
@@ -51,8 +53,15 @@ export function MatchCard({ match, prediction: initialPrediction }: MatchCardPro
       ? prediction!.predicted_away
       : "-";
 
+  const showConfetti =
+    isFinished && prediction !== undefined && prediction.points_earned > 0;
+
   return (
     <article className="overflow-hidden rounded-xl border border-dorado-copa/20 bg-[#1a1a1a] shadow-lg">
+      <PointsConfetti
+        points={prediction?.points_earned ?? 0}
+        active={showConfetti}
+      />
       <div className="flex items-center justify-between border-b border-dorado-copa/10 px-4 py-2">
         <span className="font-mono text-xs text-blanco-linea/40">
           {match.phase === "group" ? "Fase de grupos" : match.phase.toUpperCase()}
@@ -75,8 +84,8 @@ export function MatchCard({ match, prediction: initialPrediction }: MatchCardPro
 
       <div className="px-4 py-6">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="text-center">
-            <span className="text-3xl">{match.home_team.flag_emoji}</span>
+          <div className="flex flex-col items-center text-center">
+            <TeamFlag code={match.home_team.code} size="md" />
             <p className="mt-2 font-display text-lg leading-tight text-blanco-linea">
               {match.home_team.name}
             </p>
@@ -88,8 +97,8 @@ export function MatchCard({ match, prediction: initialPrediction }: MatchCardPro
             <ScoreboardDigit value={awayDisplay} />
           </div>
 
-          <div className="text-center">
-            <span className="text-3xl">{match.away_team.flag_emoji}</span>
+          <div className="flex flex-col items-center text-center">
+            <TeamFlag code={match.away_team.code} size="md" />
             <p className="mt-2 font-display text-lg leading-tight text-blanco-linea">
               {match.away_team.name}
             </p>

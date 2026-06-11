@@ -1,5 +1,3 @@
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -47,18 +45,22 @@
     --accent-foreground: 60 9% 96%;
     --destructive: 6 63% 46%;
     --destructive-foreground: 60 9% 96%;
-    --border: 46 65% 52% / 0.2;
+    --border: 46 65% 52%;
     --input: 0 0% 25%;
     --ring: 46 65% 52%;
     --radius: 0.625rem;
   }
 
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+
+  html {
+    @apply font-sans antialiased;
   }
 
   body {
-    @apply bg-negro-noche text-blanco-linea font-sans antialiased;
+    @apply bg-negro-noche text-blanco-linea min-h-screen;
     background-image: repeating-linear-gradient(
       135deg,
       rgba(26, 107, 47, 0.06) 0px,

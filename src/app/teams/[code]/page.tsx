@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
 import { MatchRow } from "@/components/matches/match-row";
+import { TeamFlag } from "@/components/teams/team-flag";
 import { buttonVariants } from "@/components/ui/button";
 import { getTeamByCode, getTeamGroupMatches } from "@/lib/queries/teams";
 import { cn } from "@/lib/utils";
@@ -29,8 +30,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
           ← Volver a equipos
         </Link>
 
-        <div className="text-center">
-          <span className="text-7xl">{team.flag_emoji}</span>
+        <div className="flex flex-col items-center text-center">
+          <TeamFlag code={team.code} size="xl" />
           <h1 className="mt-4 font-display text-5xl text-dorado-copa">
             {team.name.toUpperCase()}
           </h1>

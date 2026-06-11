@@ -342,9 +342,9 @@ Implementa en este orden exacto. Confirma cada fase antes de continuar:
 - [ ] Mostrar puntos por partido en MatchCard
 
 ### Fase 6 — Perfil y ranking
-- [ ] Página `/profile` con historial de predicciones y puntos
-- [ ] `GET /api/ranking` y página `/ranking`
-- [ ] Animación de confetti al ganar puntos
+- [x] Página `/profile` con historial de predicciones y puntos
+- [x] `GET /api/ranking` y página `/ranking`
+- [x] Animación de confetti al ganar puntos
 
 ### Fase 7 — Pulido y despliegue
 - [ ] Responsive design (mobile-first)

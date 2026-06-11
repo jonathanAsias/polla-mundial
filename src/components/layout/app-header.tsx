@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/matches", label: "Partidos" },
   { href: "/teams", label: "Equipos" },
   { href: "/ranking", label: "Ranking" },
+  { href: "/profile", label: "Perfil" },
 ];
 
 export function AppHeader() {

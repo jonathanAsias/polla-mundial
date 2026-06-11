@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
@@ -36,35 +37,47 @@ export function RegisterForm() {
 
     setLoading(true);
 
-    const checkRes = await fetch(
-      `/api/auth/check-username?username=${encodeURIComponent(username)}`
-    );
-    const checkData = await checkRes.json();
+    try {
+      const checkRes = await fetch(
+        `/api/auth/check-username?username=${encodeURIComponent(username)}`
+      );
 
-    if (!checkData.available) {
-      setError("Ese nombre de usuario ya está en uso.");
+      if (!checkRes.ok) {
+        setError("No se pudo verificar el usuario. Intenta de nuevo.");
+        setLoading(false);
+        return;
+      }
+
+      const checkData = await checkRes.json();
+
+      if (!checkData.available) {
+        setError("Ese nombre de usuario ya está en uso.");
+        setLoading(false);
+        return;
+      }
+
+      const supabase = createClient();
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { username, display_name: username },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      router.push("/auth/login?registered=1");
+    } catch {
+      setError("Error de conexión. Recarga la página e intenta de nuevo.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username, display_name: username },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(false);
-    router.push("/auth/login?registered=1");
   }
 
   return (
@@ -97,9 +110,8 @@ export function RegisterForm() {
 
       <div className="space-y-2">
         <Label htmlFor="password">Contraseña</Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           placeholder="Mínimo 6 caracteres"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

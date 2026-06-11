@@ -51,14 +51,4 @@ export async function getUserPredictionsForMatches(
   return Object.fromEntries((data ?? []).map((p) => [p.match_id, p]));
 }
 
-export async function getTopRanking(limit = 10) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, username, avatar_url, total_points")
-    .order("total_points", { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return data ?? [];
-}
+export { getRanking as getTopRanking } from "@/lib/queries/ranking";
