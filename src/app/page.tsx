@@ -43,6 +43,27 @@ export default function Home() {
           </Link>
         </div>
 
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <Link
+            href="/teams"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "border-dorado-copa/40 text-dorado-copa"
+            )}
+          >
+            Ver equipos
+          </Link>
+          <Link
+            href="/matches"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "border-dorado-copa/40 text-dorado-copa"
+            )}
+          >
+            Ver partidos
+          </Link>
+        </div>
+
         <div className="mt-16 grid grid-cols-3 gap-4 text-center">
           {[
             { value: "2", label: "pts máx / partido" },
