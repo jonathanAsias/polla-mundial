@@ -2,7 +2,7 @@ import { CalendarDays } from "lucide-react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
 import { MatchCard } from "@/components/match/match-card";
-import { RankingWidget } from "@/components/ranking/ranking-widget";
+import { DashboardRankingArea } from "@/components/dashboard/dashboard-ranking-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MatchNotificationManager } from "@/components/dashboard/match-notification-manager";
 import {
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
 
         <MatchNotificationManager />
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
+        <DashboardRankingArea entries={ranking} currentUserId={user.id}>
           <section>
             <h2 className="mb-4 font-display text-2xl text-blanco-linea">
               JORNADA DE HOY
@@ -95,9 +95,7 @@ export default async function DashboardPage() {
               </div>
             )}
           </section>
-
-          <RankingWidget entries={ranking} currentUserId={user.id} />
-        </div>
+        </DashboardRankingArea>
       </main>
     </>
   );

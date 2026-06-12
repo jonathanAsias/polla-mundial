@@ -31,27 +31,54 @@ export function RankingTable({
   if (compact) {
     return (
       <ol className="space-y-2">
-        {entries.map((entry) => (
-          <li
-            key={entry.id}
-            className={`flex items-center gap-3 rounded-lg px-2 py-1.5 ${
-              entry.id === currentUserId
-                ? "bg-dorado-copa/15 ring-1 ring-dorado-copa/30"
-                : ""
-            }`}
-          >
-            <span className="w-5 font-mono text-xs text-blanco-linea/40">
-              {entry.rank}
-            </span>
-            <UserAvatar username={entry.username} avatarUrl={entry.avatar_url} size="sm" />
-            <span className="min-w-0 flex-1 truncate text-sm text-blanco-linea">
-              @{entry.username}
-            </span>
-            <span className="font-mono text-sm font-semibold text-dorado-copa">
-              {entry.total_points}
-            </span>
-          </li>
-        ))}
+        {entries.map((entry) => {
+          const isOwn = entry.id === currentUserId;
+          const isSelected = entry.id === selectedUserId;
+          const canSelect = onSelectUser && !isOwn;
+
+          return (
+            <li
+              key={entry.id}
+              className={`flex items-center gap-3 rounded-lg px-2 py-1.5 transition ${
+                isSelected
+                  ? "bg-dorado-copa/20 ring-1 ring-dorado-copa/40"
+                  : isOwn
+                    ? "bg-dorado-copa/15 ring-1 ring-dorado-copa/30"
+                    : canSelect
+                      ? "cursor-pointer hover:bg-gris-estadio/60"
+                      : ""
+              }`}
+              onClick={canSelect ? () => onSelectUser(entry) : undefined}
+              onKeyDown={
+                canSelect
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSelectUser(entry);
+                      }
+                    }
+                  : undefined
+              }
+              tabIndex={canSelect ? 0 : undefined}
+              role={canSelect ? "button" : undefined}
+            >
+              <span className="w-5 font-mono text-xs text-blanco-linea/40">
+                {entry.rank}
+              </span>
+              <UserAvatar
+                username={entry.username}
+                avatarUrl={entry.avatar_url}
+                size="sm"
+              />
+              <span className="min-w-0 flex-1 truncate text-sm text-blanco-linea">
+                @{entry.username}
+              </span>
+              <span className="font-mono text-sm font-semibold text-dorado-copa">
+                {entry.total_points}
+              </span>
+            </li>
+          );
+        })}
       </ol>
     );
   }
