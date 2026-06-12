@@ -45,6 +45,15 @@ export default function Home() {
 
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link
+            href="/reglas"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "border-dorado-copa/40 text-dorado-copa"
+            )}
+          >
+            Cómo jugar
+          </Link>
+          <Link
             href="/teams"
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/matches", label: "Partidos" },
   { href: "/teams", label: "Equipos" },
   { href: "/ranking", label: "Ranking" },
+  { href: "/reglas", label: "Reglas" },
   { href: "/profile", label: "Perfil" },
 ];
 

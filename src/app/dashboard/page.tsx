@@ -4,13 +4,13 @@ import { AppHeader } from "@/components/layout/app-header";
 import { MatchCard } from "@/components/match/match-card";
 import { RankingWidget } from "@/components/ranking/ranking-widget";
 import { EmptyState } from "@/components/ui/empty-state";
+import { MatchNotificationManager } from "@/components/dashboard/match-notification-manager";
 import {
-  getDashboardMatches,
+  getTodayJornadaMatches,
   getUserPredictionsForMatches,
 } from "@/lib/queries/dashboard";
 import { getRanking } from "@/lib/queries/ranking";
 import { createClient } from "@/lib/supabase/server";
-import { isSameCalendarDay } from "@/lib/predictions";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
       .select("username, total_points")
       .eq("id", user.id)
       .single<{ username: string; total_points: number }>(),
-    getDashboardMatches(),
+    getTodayJornadaMatches(),
     getRanking(10),
   ]);
 
@@ -36,10 +36,6 @@ export default async function DashboardPage() {
   const predictions = await getUserPredictionsForMatches(
     user.id,
     matches.map((m) => m.id)
-  );
-
-  const hasTodayMatches = matches.some((m) =>
-    isSameCalendarDay(new Date(m.scheduled_at), new Date())
   );
 
   return (
@@ -61,17 +57,23 @@ export default async function DashboardPage() {
           </p>
         </div>
 
+        <MatchNotificationManager />
+
         <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
           <section>
             <h2 className="mb-4 font-display text-2xl text-blanco-linea">
-              {hasTodayMatches ? "PARTIDOS DE HOY" : "PRÓXIMOS PARTIDOS"}
+              JORNADA DE HOY
             </h2>
+            <p className="mb-4 text-sm text-blanco-linea/50">
+              Horario de referencia: Ciudad de México. Las predicciones cierran
+              10 minutos antes de cada partido.
+            </p>
 
             {matches.length === 0 ? (
               <EmptyState
                 icon={CalendarDays}
-                title="No hay partidos próximos"
-                description="Verifica que el seed esté cargado en Supabase."
+                title="No hay partidos hoy"
+                description="No hay encuentros programados para la jornada de hoy. Revisa el calendario en Partidos."
               />
             ) : (
               <div className="space-y-6">
