@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS public.predictions (
   predicted_home  INT NOT NULL CHECK (predicted_home >= 0 AND predicted_home <= 20),
   predicted_away  INT NOT NULL CHECK (predicted_away >= 0 AND predicted_away <= 20),
   submitted_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  points_earned   INT NOT NULL DEFAULT 0 CHECK (points_earned >= 0 AND points_earned <= 2),
+  points_earned   INT NOT NULL DEFAULT 0 CHECK (points_earned >= 0 AND points_earned <= 3),
   UNIQUE(user_id, match_id)
 );
 

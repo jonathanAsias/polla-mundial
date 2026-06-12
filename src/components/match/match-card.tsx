@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MatchWithTeams } from "@/lib/queries/matches";
 import type { Prediction } from "@/types/database";
 import {
@@ -20,6 +20,11 @@ interface MatchCardProps {
 
 export function MatchCard({ match, prediction: initialPrediction }: MatchCardProps) {
   const [prediction, setPrediction] = useState(initialPrediction);
+
+  useEffect(() => {
+    setPrediction(initialPrediction);
+  }, [initialPrediction]);
+
   const locked = isPredictionLocked(match.scheduled_at, match.status);
   const deadline = getPredictionDeadline(match.scheduled_at);
   const isFinished = match.status === "finished";

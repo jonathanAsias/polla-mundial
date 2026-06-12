@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,11 @@ export function PredictionForm({
     prediction?.predicted_away?.toString() ?? ""
   );
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setHome(prediction?.predicted_home?.toString() ?? "");
+    setAway(prediction?.predicted_away?.toString() ?? "");
+  }, [prediction?.predicted_home, prediction?.predicted_away, prediction?.id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

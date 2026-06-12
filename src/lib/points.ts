@@ -6,6 +6,7 @@ export function getWinner(home: number, away: number): Winner {
   return "draw";
 }
 
+/** Ganador correcto: 1 pt. Marcador exacto: 2 pts. Si ambos: 3 pts total. */
 export function calculateMatchPoints(
   predictedHome: number,
   predictedAway: number,
@@ -15,12 +16,14 @@ export function calculateMatchPoints(
   let points = 0;
   const predictedWinner = getWinner(predictedHome, predictedAway);
   const actualWinner = getWinner(actualHome, actualAway);
+  const exactScore =
+    predictedHome === actualHome && predictedAway === actualAway;
 
-  if (predictedWinner === actualWinner) {
-    points += 1;
+  if (exactScore) {
+    points += 2;
   }
 
-  if (predictedHome === actualHome && predictedAway === actualAway) {
+  if (predictedWinner === actualWinner) {
     points += 1;
   }
 

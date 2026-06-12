@@ -75,7 +75,7 @@ export default function Home() {
 
         <div className="mt-16 grid grid-cols-3 gap-4 text-center">
           {[
-            { value: "2", label: "pts máx / partido" },
+            { value: "3", label: "pts máx / partido" },
             { value: "48", label: "selecciones" },
             { value: "10m", label: "cierre predicciones" },
           ].map((stat) => (
