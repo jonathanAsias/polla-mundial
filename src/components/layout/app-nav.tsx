@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
@@ -25,6 +25,19 @@ export function AppNav({ isAuthenticated }: AppNavProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -33,18 +46,30 @@ export function AppNav({ isAuthenticated }: AppNavProps) {
     router.refresh();
   }
 
-  const linkClass = (href: string) =>
+  const desktopLinkClass = (href: string) =>
     cn(
       buttonVariants({ variant: "ghost", size: "sm" }),
       "justify-start text-blanco-linea/80 hover:text-dorado-copa",
       pathname === href && "bg-dorado-copa/15 text-dorado-copa"
     );
 
+  const mobileLinkClass = (href: string) =>
+    cn(
+      "flex w-full items-center rounded-lg px-4 py-3.5 text-base font-medium transition-colors",
+      pathname === href
+        ? "bg-dorado-copa/25 text-dorado-copa"
+        : "text-blanco-linea hover:bg-gris-estadio active:bg-gris-estadio"
+    );
+
   return (
     <>
       <nav className="hidden items-center gap-1 sm:flex">
         {NAV_LINKS.map((link) => (
-          <Link key={link.href} href={link.href} className={linkClass(link.href)}>
+          <Link
+            key={link.href}
+            href={link.href}
+            className={desktopLinkClass(link.href)}
+          >
             {link.label}
           </Link>
         ))}
@@ -66,7 +91,10 @@ export function AppNav({ isAuthenticated }: AppNavProps) {
         ) : (
           <Link
             href="/auth/login"
-            className={cn(buttonVariants({ size: "sm" }), "hidden text-xs sm:inline-flex")}
+            className={cn(
+              buttonVariants({ size: "sm" }),
+              "hidden text-xs sm:inline-flex"
+            )}
           >
             Entrar
           </Link>
@@ -76,7 +104,7 @@ export function AppNav({ isAuthenticated }: AppNavProps) {
           type="button"
           className={cn(
             buttonVariants({ variant: "ghost", size: "sm" }),
-            "sm:hidden"
+            "text-blanco-linea sm:hidden"
           )}
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Cerrar menú" : "Abrir menú"}
@@ -87,41 +115,53 @@ export function AppNav({ isAuthenticated }: AppNavProps) {
       </div>
 
       {open && (
-        <div className="absolute inset-x-0 top-14 border-b border-dorado-copa/20 bg-negro-noche/98 px-4 py-4 sm:hidden">
-          <nav className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={linkClass(link.href)}
-                onClick={() => setOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {isAuthenticated ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "sm" }),
-                  "justify-start text-blanco-linea/70"
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 top-14 z-40 bg-black/75 sm:hidden"
+            aria-label="Cerrar menú"
+            onClick={() => setOpen(false)}
+          />
+
+          <div className="fixed left-0 right-0 top-14 z-50 border-b border-dorado-copa/30 bg-negro-noche shadow-2xl sm:hidden">
+            <nav className="mx-auto max-w-6xl divide-y divide-dorado-copa/15 px-3 py-2">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={mobileLinkClass(link.href)}
+                  onClick={() => setOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              <div className="py-2">
+                {isAuthenticated ? (
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex w-full items-center rounded-lg px-4 py-3.5 text-base font-medium text-blanco-linea transition-colors hover:bg-gris-estadio active:bg-gris-estadio"
+                  >
+                    <LogOut className="mr-3 h-5 w-5 shrink-0" />
+                    Cerrar sesión
+                  </button>
+                ) : (
+                  <Link
+                    href="/auth/login"
+                    className={cn(
+                      buttonVariants({ size: "lg" }),
+                      "w-full justify-center"
+                    )}
+                    onClick={() => setOpen(false)}
+                  >
+                    Entrar
+                  </Link>
                 )}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Cerrar sesión
-              </button>
-            ) : (
-              <Link
-                href="/auth/login"
-                className={cn(buttonVariants({ size: "sm" }), "mt-2")}
-                onClick={() => setOpen(false)}
-              >
-                Entrar
-              </Link>
-            )}
-          </nav>
-        </div>
+              </div>
+            </nav>
+          </div>
+        </>
       )}
     </>
   );

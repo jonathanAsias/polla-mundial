@@ -10,7 +10,7 @@ export async function AppHeader() {
   } = await supabase.auth.getUser();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-dorado-copa/20 bg-negro-noche/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-dorado-copa/20 bg-negro-noche backdrop-blur-sm">
       <div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-dorado-copa" />
