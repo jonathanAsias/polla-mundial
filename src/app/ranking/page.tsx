@@ -1,7 +1,9 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { RankingPageClient } from "@/components/ranking/ranking-page-client";
 import { getRanking } from "@/lib/queries/ranking";
+import { ResultsSyncBadge } from "@/components/layout/results-sync-badge";
 import { createClient } from "@/lib/supabase/server";
+import { getResultsSyncStatus } from "@/lib/sync-meta";
 
 export default async function RankingPage() {
   const supabase = await createClient();
@@ -9,7 +11,10 @@ export default async function RankingPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const ranking = await getRanking(100);
+  const [ranking, syncStatus] = await Promise.all([
+    getRanking(100),
+    getResultsSyncStatus(),
+  ]);
 
   return (
     <>
@@ -21,6 +26,9 @@ export default async function RankingPage() {
         <p className="mt-2 text-blanco-linea/70">
           Top 100 mundialistas — ordenado por puntos totales
         </p>
+        <div className="mt-3">
+          <ResultsSyncBadge status={syncStatus} />
+        </div>
 
         <div className="mt-8">
           <RankingPageClient entries={ranking} currentUserId={user?.id} />

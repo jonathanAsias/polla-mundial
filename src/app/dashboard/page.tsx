@@ -10,7 +10,9 @@ import {
   getUserPredictionsForMatches,
 } from "@/lib/queries/dashboard";
 import { getRanking } from "@/lib/queries/ranking";
+import { ResultsSyncBadge } from "@/components/layout/results-sync-badge";
 import { createClient } from "@/lib/supabase/server";
+import { getResultsSyncStatus } from "@/lib/sync-meta";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +26,7 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  const [profileRes, matches, ranking] = await Promise.all([
+  const [profileRes, matches, ranking, syncStatus] = await Promise.all([
     supabase
       .from("profiles")
       .select("username, total_points")
@@ -32,6 +34,7 @@ export default async function DashboardPage() {
       .single<{ username: string; total_points: number }>(),
     getTodayJornadaMatches(),
     getRanking(10),
+    getResultsSyncStatus(),
   ]);
 
   const profile = profileRes.data;
@@ -48,6 +51,9 @@ export default async function DashboardPage() {
           <h1 className="font-display text-3xl text-dorado-copa sm:text-4xl">
             DASHBOARD
           </h1>
+          <div className="mt-3">
+            <ResultsSyncBadge status={syncStatus} />
+          </div>
           <p className="mt-2 text-blanco-linea/70">
             Bienvenido,{" "}
             <span className="font-mono text-dorado-copa">

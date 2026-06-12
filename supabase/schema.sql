@@ -39,7 +39,14 @@ CREATE TABLE IF NOT EXISTS public.matches (
   status          TEXT NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'live', 'finished')),
   external_id     INT UNIQUE,
   venue           TEXT,
-  city            TEXT
+  city            TEXT,
+  results_updated_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS public.app_settings (
+  key         TEXT PRIMARY KEY,
+  value       TEXT NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_matches_scheduled_at ON public.matches(scheduled_at);

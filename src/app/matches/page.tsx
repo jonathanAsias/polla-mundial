@@ -2,10 +2,15 @@ import { Calendar } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
 import { MatchesClient } from "@/components/matches/matches-client";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResultsSyncBadge } from "@/components/layout/results-sync-badge";
 import { getAllMatches } from "@/lib/queries/matches";
+import { getResultsSyncStatus } from "@/lib/sync-meta";
 
 export default async function MatchesPage() {
-  const matches = await getAllMatches();
+  const [matches, syncStatus] = await Promise.all([
+    getAllMatches(),
+    getResultsSyncStatus(),
+  ]);
 
   return (
     <>
@@ -17,6 +22,9 @@ export default async function MatchesPage() {
         <p className="mt-2 text-blanco-linea/70">
           Calendario completo del Mundial 2026 — 104 partidos
         </p>
+        <div className="mt-3">
+          <ResultsSyncBadge status={syncStatus} />
+        </div>
 
         {matches.length === 0 ? (
           <EmptyState

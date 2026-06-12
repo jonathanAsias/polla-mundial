@@ -5,6 +5,7 @@ import {
   type ApiFootballFixture,
 } from "@/lib/api-football";
 import { calculatePointsForMatch } from "@/lib/points-service";
+import { recordResultsSync, touchMatchResultsUpdated } from "@/lib/sync-meta";
 
 interface DbMatch {
   id: number;
@@ -76,10 +77,18 @@ export async function syncMatchResults() {
 
     synced++;
 
+    if (homeScore !== null && awayScore !== null) {
+      await touchMatchResultsUpdated(match.id);
+    }
+
     if (status === "finished" && homeScore !== null && awayScore !== null) {
       const result = await calculatePointsForMatch(match.id);
       pointsCalculated += result.updated;
     }
+  }
+
+  if (synced > 0) {
+    await recordResultsSync("API-Football");
   }
 
   return { synced, pointsCalculated };

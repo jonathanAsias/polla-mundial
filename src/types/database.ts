@@ -38,6 +38,7 @@ export interface Match {
   external_id: number | null;
   venue: string | null;
   city: string | null;
+  results_updated_at: string | null;
 }
 
 export interface Prediction {
