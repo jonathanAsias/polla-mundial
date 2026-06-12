@@ -31,7 +31,9 @@ export default function ReglasPage() {
             SISTEMA DE PUNTOS
           </h2>
           <p className="mt-2 text-sm text-blanco-linea/60">
-            Los puntos se calculan automáticamente cuando el partido finaliza.
+            Al finalizar cada jornada (medianoche, hora Ciudad de México), el
+            sistema compara tus predicciones con los resultados finales de cada
+            partido del día y actualiza puntos y ranking.
           </p>
           <div className="mt-4 overflow-hidden rounded-lg border border-dorado-copa/15">
             <table className="w-full text-sm">

@@ -63,4 +63,34 @@ export function isSameDayInTimezone(
   return formatter.format(new Date(isoDate)) === formatter.format(referenceDate);
 }
 
+/** Fecha calendario anterior en la zona horaria (p. ej. jornada que acaba de terminar). */
+export function getPreviousCalendarDayInTimezone(
+  timeZone = DEFAULT_TIMEZONE,
+  referenceDate = new Date()
+): Date {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const dateKey = formatter.format(referenceDate);
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  utc.setUTCDate(utc.getUTCDate() - 1);
+  return utc;
+}
+
+export function formatCalendarDayInTimezone(
+  date: Date,
+  timeZone = DEFAULT_TIMEZONE
+): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 export { DEFAULT_TIMEZONE };

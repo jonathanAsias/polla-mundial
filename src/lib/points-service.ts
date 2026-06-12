@@ -1,5 +1,11 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { calculateMatchPoints } from "@/lib/points";
+import {
+  DEFAULT_TIMEZONE,
+  formatCalendarDayInTimezone,
+  getDayBoundsInTimezone,
+  getPreviousCalendarDayInTimezone,
+} from "@/lib/timezone";
 
 export async function calculatePointsForMatch(matchId: number) {
   const supabase = createServiceClient();
@@ -77,4 +83,87 @@ export async function recalculateUserTotalPoints(userId: string) {
     .eq("id", userId);
 
   return total;
+}
+
+/**
+ * Al cierre de la jornada: compara cada predicción con el resultado final
+ * de los partidos finalizados de ese día y actualiza puntos + totales.
+ */
+export async function settleDayJornadaPoints(
+  dayDate: Date = getPreviousCalendarDayInTimezone(),
+  timeZone = DEFAULT_TIMEZONE
+) {
+  const supabase = createServiceClient();
+  const { start, end } = getDayBoundsInTimezone(timeZone, dayDate);
+  const dayLabel = formatCalendarDayInTimezone(dayDate, timeZone);
+
+  const { data: matches, error } = await supabase
+    .from("matches")
+    .select("id, external_id, home_score, away_score")
+    .gte("scheduled_at", start.toISOString())
+    .lte("scheduled_at", end.toISOString())
+    .eq("status", "finished")
+    .not("home_score", "is", null)
+    .not("away_score", "is", null);
+
+  if (error) throw error;
+
+  let predictionsUpdated = 0;
+  const matchIds: number[] = [];
+
+  for (const match of matches ?? []) {
+    const result = await calculatePointsForMatch(match.id);
+    predictionsUpdated += result.updated;
+    matchIds.push(match.id);
+  }
+
+  await recalculateAllUserTotals();
+
+  return {
+    day: dayLabel,
+    matchesProcessed: matchIds.length,
+    predictionsUpdated,
+    matchIds,
+  };
+}
+
+/** Recalcula puntos de todos los partidos finalizados (idempotente). */
+export async function settleAllFinishedMatches() {
+  const supabase = createServiceClient();
+
+  const { data: matches, error } = await supabase
+    .from("matches")
+    .select("id")
+    .eq("status", "finished")
+    .not("home_score", "is", null)
+    .not("away_score", "is", null);
+
+  if (error) throw error;
+
+  let predictionsUpdated = 0;
+
+  for (const match of matches ?? []) {
+    const result = await calculatePointsForMatch(match.id);
+    predictionsUpdated += result.updated;
+  }
+
+  await recalculateAllUserTotals();
+
+  return {
+    matchesProcessed: matches?.length ?? 0,
+    predictionsUpdated,
+  };
+}
+
+export async function recalculateAllUserTotals() {
+  const supabase = createServiceClient();
+  const { data: profiles, error } = await supabase.from("profiles").select("id");
+
+  if (error) throw error;
+
+  for (const profile of profiles ?? []) {
+    await recalculateUserTotalPoints(profile.id);
+  }
+
+  return profiles?.length ?? 0;
 }
