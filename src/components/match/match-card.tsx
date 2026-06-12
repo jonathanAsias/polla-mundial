@@ -62,8 +62,8 @@ export function MatchCard({ match, prediction: initialPrediction }: MatchCardPro
         points={prediction?.points_earned ?? 0}
         active={showConfetti}
       />
-      <div className="flex items-center justify-between border-b border-dorado-copa/10 px-4 py-2">
-        <span className="font-mono text-xs text-blanco-linea/40">
+      <div className="flex flex-wrap items-center justify-between gap-1 border-b border-dorado-copa/10 px-3 py-2 sm:px-4">
+        <span className="font-mono text-[10px] text-blanco-linea/40 sm:text-xs">
           {match.phase === "group" ? "Fase de grupos" : match.phase.toUpperCase()}
           {match.external_id && ` · #${match.external_id}`}
         </span>
@@ -82,24 +82,24 @@ export function MatchCard({ match, prediction: initialPrediction }: MatchCardPro
         </span>
       </div>
 
-      <div className="px-4 py-6">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <div className="px-3 py-5 sm:px-4 sm:py-6">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
           <div className="flex flex-col items-center text-center">
             <TeamFlag code={match.home_team.code} size="md" />
-            <p className="mt-2 font-display text-lg leading-tight text-blanco-linea">
+            <p className="mt-2 font-display text-sm leading-tight text-blanco-linea sm:text-lg">
               {match.home_team.name}
             </p>
           </div>
 
-          <div className="flex items-center gap-1 rounded-lg bg-negro-noche px-4 py-3">
+          <div className="flex items-center gap-0.5 rounded-lg bg-negro-noche px-2 py-2 sm:gap-1 sm:px-4 sm:py-3">
             <ScoreboardDigit value={homeDisplay} />
-            <span className="font-display text-3xl text-dorado-copa/50">:</span>
+            <span className="font-display text-2xl text-dorado-copa/50 sm:text-3xl">:</span>
             <ScoreboardDigit value={awayDisplay} />
           </div>
 
           <div className="flex flex-col items-center text-center">
             <TeamFlag code={match.away_team.code} size="md" />
-            <p className="mt-2 font-display text-lg leading-tight text-blanco-linea">
+            <p className="mt-2 font-display text-sm leading-tight text-blanco-linea sm:text-lg">
               {match.away_team.name}
             </p>
           </div>

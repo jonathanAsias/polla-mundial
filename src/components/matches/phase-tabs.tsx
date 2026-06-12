@@ -19,14 +19,14 @@ interface PhaseTabsProps {
 
 export function PhaseTabs({ active, onChange }: PhaseTabsProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none">
       {PHASES.map((phase) => (
         <button
           key={phase.id}
           type="button"
           onClick={() => onChange(phase.id)}
           className={cn(
-            "rounded-lg border px-3 py-1.5 font-display text-sm tracking-wide transition",
+            "shrink-0 rounded-lg border px-3 py-1.5 font-display text-sm tracking-wide transition",
             active === phase.id
               ? "border-dorado-copa bg-dorado-copa/20 text-dorado-copa"
               : "border-dorado-copa/20 text-blanco-linea/60 hover:border-dorado-copa/40 hover:text-blanco-linea"

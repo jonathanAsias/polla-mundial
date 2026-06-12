@@ -34,7 +34,9 @@ export default async function ProfilePage() {
     <>
       <AppHeader />
       <main className="mx-auto max-w-5xl px-4 py-10">
-        <h1 className="font-display text-4xl text-dorado-copa">MI PERFIL</h1>
+        <h1 className="font-display text-3xl text-dorado-copa sm:text-4xl">
+          MI PERFIL
+        </h1>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[320px_1fr]">
           <section className="rounded-xl border border-dorado-copa/20 bg-gris-estadio/60 p-6">
@@ -45,7 +47,7 @@ export default async function ProfilePage() {
           </section>
 
           <div className="space-y-8">
-            <section className="grid grid-cols-3 gap-4">
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {[
                 { label: "Puntos totales", value: profile.total_points },
                 { label: "Predicciones", value: predictions.length },

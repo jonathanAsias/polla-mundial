@@ -28,8 +28,8 @@ export function MatchRow({ match }: MatchRowProps) {
     match.away_score !== null;
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-dorado-copa/15 bg-gris-estadio/60 px-4 py-3">
-      <span className="text-lg" title={match.status}>
+    <div className="flex items-start gap-3 rounded-xl border border-dorado-copa/15 bg-gris-estadio/60 px-3 py-3 sm:items-center sm:gap-4 sm:px-4">
+      <span className="shrink-0 text-base sm:text-lg" title={match.status}>
         {STATUS_ICON[match.status] ?? "🟡"}
       </span>
 
@@ -39,20 +39,20 @@ export function MatchRow({ match }: MatchRowProps) {
             {away ? `${home} vs ${away}` : home}
           </p>
         ) : (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <div className="flex items-center gap-2">
               <TeamFlag code={match.home_team.code} size="sm" />
-              <span className="font-display text-base text-blanco-linea">
+              <span className="font-display text-sm text-blanco-linea sm:text-base">
                 {home}
               </span>
             </div>
-            <span className="font-mono text-dorado-copa">
+            <span className="font-mono text-sm text-dorado-copa sm:text-base">
               {hasScore
                 ? `${match.home_score} - ${match.away_score}`
                 : "vs"}
             </span>
             <div className="flex items-center gap-2">
-              <span className="font-display text-base text-blanco-linea">
+              <span className="font-display text-sm text-blanco-linea sm:text-base">
                 {away}
               </span>
               <TeamFlag code={match.away_team.code} size="sm" />

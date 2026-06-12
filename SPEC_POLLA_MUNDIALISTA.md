@@ -347,10 +347,10 @@ Implementa en este orden exacto. Confirma cada fase antes de continuar:
 - [x] Animación de confetti al ganar puntos
 
 ### Fase 7 — Pulido y despliegue
-- [ ] Responsive design (mobile-first)
-- [ ] Loading skeletons para todas las listas
-- [ ] Error boundaries y estados vacíos
-- [ ] Deploy a Vercel con variables de entorno
+- [x] Responsive design (mobile-first)
+- [x] Loading skeletons para todas las listas
+- [x] Error boundaries y estados vacíos
+- [x] Deploy a Vercel con variables de entorno
 
 ---
 

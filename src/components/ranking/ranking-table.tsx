@@ -1,5 +1,7 @@
+import { Trophy } from "lucide-react";
 import type { RankingEntry } from "@/lib/queries/ranking";
 import { UserAvatar } from "@/components/ranking/user-avatar";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface RankingTableProps {
   entries: RankingEntry[];
@@ -14,9 +16,11 @@ export function RankingTable({
 }: RankingTableProps) {
   if (entries.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-blanco-linea/50">
-        Sin datos en el ranking aún.
-      </p>
+      <EmptyState
+        icon={Trophy}
+        title="Ranking vacío"
+        description="Registra predicciones para aparecer en el ranking."
+      />
     );
   }
 
@@ -50,7 +54,7 @@ export function RankingTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-dorado-copa/20">
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[400px] text-sm">
         <thead>
           <tr className="border-b border-dorado-copa/15 bg-gris-estadio/80 text-left text-xs uppercase tracking-wide text-blanco-linea/50">
             <th className="px-4 py-3 font-mono">Pos</th>

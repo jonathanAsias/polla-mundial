@@ -1,5 +1,7 @@
+import { Users } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
 import { TeamCard } from "@/components/teams/team-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getAllTeams } from "@/lib/queries/teams";
 
 export default async function TeamsPage() {
@@ -18,18 +20,20 @@ export default async function TeamsPage() {
     <>
       <AppHeader />
       <main className="mx-auto max-w-6xl px-4 py-10">
-        <h1 className="font-display text-4xl text-dorado-copa">EQUIPOS</h1>
+        <h1 className="font-display text-3xl text-dorado-copa sm:text-4xl">
+          EQUIPOS
+        </h1>
         <p className="mt-2 text-blanco-linea/70">
           48 selecciones del Mundial 2026 — sorteo oficial FIFA
         </p>
 
         {teams.length === 0 ? (
-          <div className="mt-12 rounded-xl border border-dorado-copa/20 bg-gris-estadio p-8 text-center">
-            <p className="text-blanco-linea/70">
-              No hay equipos cargados. Ejecuta{" "}
-              <code className="font-mono text-dorado-copa">npm run seed</code>
-            </p>
-          </div>
+          <EmptyState
+            className="mt-12"
+            icon={Users}
+            title="Sin equipos cargados"
+            description="Ejecuta el seed en Supabase para cargar las 48 selecciones."
+          />
         ) : (
           <div className="mt-10 space-y-12">
             {groups.map((group) => (

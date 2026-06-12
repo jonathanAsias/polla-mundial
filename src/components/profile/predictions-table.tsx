@@ -1,5 +1,7 @@
+import { ClipboardList } from "lucide-react";
 import type { PredictionWithMatch } from "@/lib/queries/profile";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface PredictionsTableProps {
   predictions: PredictionWithMatch[];
@@ -8,15 +10,71 @@ interface PredictionsTableProps {
 export function PredictionsTable({ predictions }: PredictionsTableProps) {
   if (predictions.length === 0) {
     return (
-      <p className="text-sm text-blanco-linea/50">
-        No has registrado predicciones aún.
-      </p>
+      <EmptyState
+        icon={ClipboardList}
+        title="Sin predicciones"
+        description="Ve al dashboard y predice los próximos partidos."
+      />
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-dorado-copa/20">
-      <table className="w-full text-sm">
+    <>
+      <div className="space-y-3 md:hidden">
+        {predictions.map((p) => {
+          const m = p.match;
+          const finished =
+            m?.status === "finished" &&
+            m.home_score !== null &&
+            m.away_score !== null;
+
+          return (
+            <div
+              key={p.id}
+              className="rounded-xl border border-dorado-copa/15 bg-gris-estadio/40 p-4"
+            >
+              {m && (
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <TeamFlag code={m.home_team.code} size="sm" />
+                  <span>{m.home_team.name}</span>
+                  <span className="text-blanco-linea/40">vs</span>
+                  <span>{m.away_team.name}</span>
+                  <TeamFlag code={m.away_team.code} size="sm" />
+                </div>
+              )}
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+                <div>
+                  <p className="text-blanco-linea/50">Predicción</p>
+                  <p className="mt-1 font-mono text-blanco-linea">
+                    {p.predicted_home} - {p.predicted_away}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-blanco-linea/50">Resultado</p>
+                  <p className="mt-1 font-mono text-blanco-linea">
+                    {finished ? `${m!.home_score} - ${m!.away_score}` : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-blanco-linea/50">Pts</p>
+                  <p
+                    className={`mt-1 font-mono font-semibold ${
+                      finished && p.points_earned > 0
+                        ? "text-dorado-copa"
+                        : "text-blanco-linea/40"
+                    }`}
+                  >
+                    {finished ? p.points_earned : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border border-dorado-copa/20 md:block">
+      <table className="w-full min-w-[520px] text-sm">
         <thead>
           <tr className="border-b border-dorado-copa/15 bg-gris-estadio/80 text-left text-xs uppercase tracking-wide text-blanco-linea/50">
             <th className="px-4 py-3">Partido</th>
@@ -92,6 +150,7 @@ export function PredictionsTable({ predictions }: PredictionsTableProps) {
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

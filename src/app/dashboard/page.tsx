@@ -1,7 +1,9 @@
+import { CalendarDays } from "lucide-react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
 import { MatchCard } from "@/components/match/match-card";
 import { RankingWidget } from "@/components/ranking/ranking-widget";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   getDashboardMatches,
   getUserPredictionsForMatches,
@@ -45,7 +47,9 @@ export default async function DashboardPage() {
       <AppHeader />
       <main className="mx-auto max-w-6xl px-4 py-10">
         <div className="mb-8">
-          <h1 className="font-display text-4xl text-dorado-copa">DASHBOARD</h1>
+          <h1 className="font-display text-3xl text-dorado-copa sm:text-4xl">
+            DASHBOARD
+          </h1>
           <p className="mt-2 text-blanco-linea/70">
             Bienvenido,{" "}
             <span className="font-mono text-dorado-copa">
@@ -64,11 +68,11 @@ export default async function DashboardPage() {
             </h2>
 
             {matches.length === 0 ? (
-              <div className="rounded-xl border border-dorado-copa/20 bg-gris-estadio p-8 text-center">
-                <p className="text-blanco-linea/70">
-                  No hay partidos próximos. Verifica que el seed esté cargado.
-                </p>
-              </div>
+              <EmptyState
+                icon={CalendarDays}
+                title="No hay partidos próximos"
+                description="Verifica que el seed esté cargado en Supabase."
+              />
             ) : (
               <div className="space-y-6">
                 {matches.map((match) => (
