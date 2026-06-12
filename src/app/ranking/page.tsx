@@ -1,5 +1,5 @@
 import { AppHeader } from "@/components/layout/app-header";
-import { RankingTable } from "@/components/ranking/ranking-table";
+import { RankingPageClient } from "@/components/ranking/ranking-page-client";
 import { getRanking } from "@/lib/queries/ranking";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,7 +23,7 @@ export default async function RankingPage() {
         </p>
 
         <div className="mt-8">
-          <RankingTable entries={ranking} currentUserId={user?.id} />
+          <RankingPageClient entries={ranking} currentUserId={user?.id} />
         </div>
       </main>
     </>

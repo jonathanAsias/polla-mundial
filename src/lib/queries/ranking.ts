@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import type { PredictionWithMatch } from "@/lib/queries/profile";
 
 export interface RankingEntry {
   id: string;
@@ -44,4 +45,28 @@ export async function getRanking(limit = 100): Promise<RankingEntry[]> {
     rank: index + 1,
     predictions_count: countMap.get(profile.id) ?? 0,
   }));
+}
+
+export async function getUserPredictionsForRanking(
+  userId: string
+): Promise<PredictionWithMatch[]> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("predictions")
+    .select(
+      `
+      id, predicted_home, predicted_away, points_earned, submitted_at,
+      match:matches(
+        id, scheduled_at, home_score, away_score, status, phase,
+        home_team:teams!matches_home_team_id_fkey(name, code),
+        away_team:teams!matches_away_team_id_fkey(name, code)
+      )
+    `
+    )
+    .eq("user_id", userId)
+    .order("submitted_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as PredictionWithMatch[];
 }

@@ -6,12 +6,16 @@ import { EmptyState } from "@/components/ui/empty-state";
 interface RankingTableProps {
   entries: RankingEntry[];
   currentUserId?: string;
+  selectedUserId?: string;
+  onSelectUser?: (entry: RankingEntry) => void;
   compact?: boolean;
 }
 
 export function RankingTable({
   entries,
   currentUserId,
+  selectedUserId,
+  onSelectUser,
   compact = false,
 }: RankingTableProps) {
   if (entries.length === 0) {
@@ -64,38 +68,61 @@ export function RankingTable({
           </tr>
         </thead>
         <tbody>
-          {entries.map((entry) => (
-            <tr
-              key={entry.id}
-              className={`border-b border-dorado-copa/10 transition ${
-                entry.id === currentUserId
-                  ? "bg-dorado-copa/15"
-                  : "hover:bg-gris-estadio/40"
-              }`}
-            >
-              <td className="px-4 py-3 font-mono text-blanco-linea/60">
-                {entry.rank}
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <UserAvatar
-                    username={entry.username}
-                    avatarUrl={entry.avatar_url}
-                    size="sm"
-                  />
-                  <span className="font-medium text-blanco-linea">
-                    @{entry.username}
-                  </span>
-                </div>
-              </td>
-              <td className="px-4 py-3 text-right font-mono font-semibold text-dorado-copa">
-                {entry.total_points}
-              </td>
-              <td className="px-4 py-3 text-right font-mono text-blanco-linea/70">
-                {entry.predictions_count}
-              </td>
-            </tr>
-          ))}
+          {entries.map((entry) => {
+            const isOwn = entry.id === currentUserId;
+            const isSelected = entry.id === selectedUserId;
+            const canSelect = onSelectUser && !isOwn;
+
+            return (
+              <tr
+                key={entry.id}
+                className={`border-b border-dorado-copa/10 transition ${
+                  isSelected
+                    ? "bg-dorado-copa/20 ring-1 ring-inset ring-dorado-copa/40"
+                    : isOwn
+                      ? "bg-dorado-copa/15"
+                      : canSelect
+                        ? "cursor-pointer hover:bg-gris-estadio/40"
+                        : "hover:bg-gris-estadio/40"
+                }`}
+                onClick={canSelect ? () => onSelectUser(entry) : undefined}
+                onKeyDown={
+                  canSelect
+                    ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onSelectUser(entry);
+                        }
+                      }
+                    : undefined
+                }
+                tabIndex={canSelect ? 0 : undefined}
+                role={canSelect ? "button" : undefined}
+              >
+                <td className="px-4 py-3 font-mono text-blanco-linea/60">
+                  {entry.rank}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      username={entry.username}
+                      avatarUrl={entry.avatar_url}
+                      size="sm"
+                    />
+                    <span className="font-medium text-blanco-linea">
+                      @{entry.username}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-right font-mono font-semibold text-dorado-copa">
+                  {entry.total_points}
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-blanco-linea/70">
+                  {entry.predictions_count}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

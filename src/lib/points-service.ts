@@ -46,10 +46,17 @@ export async function calculatePointsForMatch(matchId: number) {
       match.away_score
     );
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("predictions")
       .update({ points_earned: points })
       .eq("id", pred.id);
+
+    if (updateError) {
+      throw new Error(
+        `No se pudo guardar puntos (predicción ${pred.id}): ${updateError.message}. ` +
+          "¿Ejecutaste supabase/points_max_3.sql?"
+      );
+    }
 
     affectedUsers.add(pred.user_id);
   }
