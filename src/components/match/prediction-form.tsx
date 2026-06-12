@@ -93,8 +93,8 @@ export function PredictionForm({
         <Lock className="h-4 w-4 text-dorado-copa/60" />
         <span className="text-sm text-blanco-linea/50">
           {prediction
-            ? `Tu predicción: ${prediction.predicted_home} - ${prediction.predicted_away}`
-            : "Predicciones cerradas"}
+            ? `Tu predicción: ${prediction.predicted_home} - ${prediction.predicted_away} · cerrada`
+            : "Predicciones cerradas (10 min antes del partido)"}
         </span>
       </div>
     );

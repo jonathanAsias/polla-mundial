@@ -79,7 +79,10 @@ export async function POST(request: Request) {
 
   if (isPredictionLocked(match.scheduled_at, match.status)) {
     return NextResponse.json(
-      { error: "Las predicciones están cerradas para este partido" },
+      {
+        error:
+          "Las predicciones están cerradas (10 minutos antes del inicio del partido)",
+      },
       { status: 403 }
     );
   }

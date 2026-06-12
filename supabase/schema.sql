@@ -121,10 +121,32 @@ CREATE POLICY "matches_select_all" ON public.matches
 CREATE POLICY "predictions_select_own" ON public.predictions
   FOR SELECT USING (auth.uid() = user_id);
 
+CREATE OR REPLACE FUNCTION public.match_accepts_predictions(p_match_id int)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.matches m
+    WHERE m.id = p_match_id
+      AND m.status = 'upcoming'
+      AND NOW() < m.scheduled_at - interval '10 minutes'
+  );
+$$;
+
 CREATE POLICY "predictions_insert_own" ON public.predictions
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (
+    auth.uid() = user_id
+    AND public.match_accepts_predictions(match_id)
+  );
 
 CREATE POLICY "predictions_update_own" ON public.predictions
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (
+    auth.uid() = user_id
+    AND public.match_accepts_predictions(match_id)
+  );
 
 -- Service role bypasses RLS for cron/sync operations

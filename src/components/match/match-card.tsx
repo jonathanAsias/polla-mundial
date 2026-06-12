@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import type { MatchWithTeams } from "@/lib/queries/matches";
 import type { Prediction } from "@/types/database";
-import {
-  getPredictionDeadline,
-  isPredictionLocked,
-} from "@/lib/predictions";
+import { getPredictionDeadline } from "@/lib/predictions";
+import { usePredictionLock } from "@/hooks/use-prediction-lock";
 import { CountdownTimer } from "@/components/match/countdown-timer";
 import { PredictionForm } from "@/components/match/prediction-form";
 import { ScoreboardDigit } from "@/components/match/scoreboard-digit";
@@ -25,7 +23,7 @@ export function MatchCard({ match, prediction: initialPrediction }: MatchCardPro
     setPrediction(initialPrediction);
   }, [initialPrediction]);
 
-  const locked = isPredictionLocked(match.scheduled_at, match.status);
+  const locked = usePredictionLock(match.scheduled_at, match.status);
   const deadline = getPredictionDeadline(match.scheduled_at);
   const isFinished = match.status === "finished";
   const isLive = match.status === "live";
