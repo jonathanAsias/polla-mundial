@@ -1,10 +1,16 @@
 const API_BASE = "https://v3.football.api-sports.io";
+const WORLD_CUP_LEAGUE_ID = 1;
 
 export interface ApiFootballFixture {
   fixture: {
     id: number;
     date: string;
     status: { short: string };
+  };
+  league?: {
+    id: number;
+    name: string;
+    season: number;
   };
   teams: {
     home: { id: number; name: string };
@@ -28,11 +34,53 @@ export function parseFixtureStatus(short: string) {
   return mapStatus(short);
 }
 
+export async function fetchFixturesByDate(
+  date: string
+): Promise<ApiFootballFixture[]> {
+  const apiKey = process.env.API_FOOTBALL_KEY;
+  if (!apiKey) throw new Error("API_FOOTBALL_KEY no configurada");
+
+  const url = `${API_BASE}/fixtures?date=${date}`;
+  const res = await fetch(url, {
+    headers: { "x-apisports-key": apiKey },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`API-Football error: ${res.status} ${res.statusText}`);
+  }
+
+  const json = await res.json();
+  return (json.response ?? []) as ApiFootballFixture[];
+}
+
+export function isWorldCupFixture(fixture: ApiFootballFixture): boolean {
+  return (
+    fixture.league?.id === WORLD_CUP_LEAGUE_ID ||
+    (fixture.league?.name?.toLowerCase().includes("world cup") ?? false)
+  );
+}
+
+/** Plan gratuito: temporada 2026 no disponible por league+season; usar por fecha. */
+export async function fetchWorldCupFixturesForDates(
+  dates: string[]
+): Promise<ApiFootballFixture[]> {
+  const uniqueDates = Array.from(new Set(dates));
+  const fixtures: ApiFootballFixture[] = [];
+
+  for (const date of uniqueDates) {
+    const dayFixtures = await fetchFixturesByDate(date);
+    fixtures.push(...dayFixtures.filter(isWorldCupFixture));
+  }
+
+  return fixtures;
+}
+
 export async function fetchWorldCupFixtures(
   season = 2026
 ): Promise<ApiFootballFixture[]> {
   const apiKey = process.env.API_FOOTBALL_KEY;
-  const leagueId = process.env.API_FOOTBALL_LEAGUE_ID ?? "1";
+  const leagueId = process.env.API_FOOTBALL_LEAGUE_ID ?? String(WORLD_CUP_LEAGUE_ID);
 
   if (!apiKey) {
     throw new Error("API_FOOTBALL_KEY no configurada");
@@ -43,7 +91,7 @@ export async function fetchWorldCupFixtures(
     headers: {
       "x-apisports-key": apiKey,
     },
-    next: { revalidate: 0 },
+    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -51,7 +99,13 @@ export async function fetchWorldCupFixtures(
   }
 
   const json = await res.json();
-  return (json.response ?? []) as ApiFootballFixture[];
+  const fixtures = (json.response ?? []) as ApiFootballFixture[];
+
+  if (fixtures.length === 0 && json.errors) {
+    console.warn("API-Football league/season vacío:", json.errors);
+  }
+
+  return fixtures;
 }
 
 export async function fetchFixtureById(

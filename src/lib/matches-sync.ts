@@ -1,11 +1,12 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import {
-  fetchWorldCupFixtures,
+  fetchWorldCupFixturesForDates,
   parseFixtureStatus,
   type ApiFootballFixture,
 } from "@/lib/api-football";
 import { calculatePointsForMatch } from "@/lib/points-service";
 import { recordResultsSync, touchMatchResultsUpdated } from "@/lib/sync-meta";
+import { apiTeamNameToCode } from "@/lib/team-api-aliases";
 
 interface DbMatch {
   id: number;
@@ -38,23 +39,37 @@ export async function syncMatchResults() {
 
   const matches = (dbMatches ?? []) as unknown as DbMatch[];
   if (matches.length === 0) {
-    return { synced: 0, pointsCalculated: 0 };
+    return { synced: 0, pointsCalculated: 0, pending: 0, fixturesFound: 0 };
   }
+
+  const dates = matches.map((m) =>
+    new Date(m.scheduled_at).toISOString().slice(0, 10)
+  );
 
   let apiFixtures: ApiFootballFixture[] = [];
   try {
-    apiFixtures = await fetchWorldCupFixtures();
+    apiFixtures = await fetchWorldCupFixturesForDates(dates);
   } catch (e) {
     console.warn("API-Football no disponible:", e);
-    return { synced: 0, pointsCalculated: 0, error: String(e) };
+    return {
+      synced: 0,
+      pointsCalculated: 0,
+      pending: matches.length,
+      fixturesFound: 0,
+      error: String(e),
+    };
   }
 
   let synced = 0;
   let pointsCalculated = 0;
+  let unmatched = 0;
 
   for (const match of matches) {
     const fixture = findMatchingFixture(match, apiFixtures);
-    if (!fixture) continue;
+    if (!fixture) {
+      unmatched++;
+      continue;
+    }
 
     const status = parseFixtureStatus(fixture.fixture.status.short);
     const homeScore = fixture.goals.home;
@@ -91,7 +106,13 @@ export async function syncMatchResults() {
     await recordResultsSync("API-Football");
   }
 
-  return { synced, pointsCalculated };
+  return {
+    synced,
+    pointsCalculated,
+    pending: matches.length,
+    fixturesFound: apiFixtures.length,
+    unmatched,
+  };
 }
 
 function findMatchingFixture(
@@ -107,10 +128,12 @@ function findMatchingFixture(
     if (byTeamId) return byTeamId;
   }
 
-  const matchDate = new Date(match.scheduled_at).toISOString().slice(0, 10);
+  const homeCode = match.home_team.code;
+  const awayCode = match.away_team.code;
 
   return fixtures.find((f) => {
-    const fixtureDate = new Date(f.fixture.date).toISOString().slice(0, 10);
-    return fixtureDate === matchDate;
+    const fHome = apiTeamNameToCode(f.teams.home.name);
+    const fAway = apiTeamNameToCode(f.teams.away.name);
+    return fHome === homeCode && fAway === awayCode;
   });
 }

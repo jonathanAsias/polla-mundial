@@ -34,10 +34,31 @@ export function SyncMenuButton({
 
       const synced = data.sync?.synced ?? 0;
       const predictionsUpdated = data.points?.predictionsUpdated ?? 0;
+      const fixturesFound = data.sync?.fixturesFound ?? 0;
+      const unmatched = data.sync?.unmatched ?? 0;
+
+      if (data.sync?.error) {
+        toast.error(`API-Football: ${data.sync.error}`);
+        return;
+      }
+
+      if (fixturesFound === 0 && synced === 0) {
+        toast.warning(
+          "No se encontraron partidos del Mundial en API-Football para las fechas pendientes"
+        );
+        return;
+      }
+
+      if (unmatched > 0 && synced === 0) {
+        toast.warning(
+          `API devolvió ${fixturesFound} partido(s) pero ninguno coincidió con el calendario local`
+        );
+        return;
+      }
 
       toast.success(
         synced > 0 || predictionsUpdated > 0
-          ? `Sincronizado: ${synced} partido${synced === 1 ? "" : "s"} actualizado${synced === 1 ? "" : "s"}, ${predictionsUpdated} predicción${predictionsUpdated === 1 ? "" : "es"} recalculada${predictionsUpdated === 1 ? "" : "s"}`
+          ? `Sincronizado: ${synced} partido${synced === 1 ? "" : "s"} actualizado${synced === 1 ? "" : "s"}, ${predictionsUpdated} predicción${predictionsUpdated === 1 ? "" : "es"} recalculada${predictionsUpdated === 1 ? "" : "es"}`
           : "Todo al día — no había cambios pendientes"
       );
 
