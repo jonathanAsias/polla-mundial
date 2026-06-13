@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { SyncMenuButton } from "@/components/layout/sync-menu-button";
 import { createClient } from "@/lib/supabase/client";
 
 const NAV_LINKS = [
@@ -74,6 +75,7 @@ export function AppNav({ isAuthenticated }: AppNavProps) {
             {link.label}
           </Link>
         ))}
+        {isAuthenticated ? <SyncMenuButton /> : null}
       </nav>
 
       <div className="flex items-center gap-2">
@@ -139,14 +141,20 @@ export function AppNav({ isAuthenticated }: AppNavProps) {
 
               <div className="py-2">
                 {isAuthenticated ? (
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="flex w-full items-center rounded-lg px-4 py-3.5 text-base font-medium text-blanco-linea transition-colors hover:bg-gris-estadio active:bg-gris-estadio"
-                  >
-                    <LogOut className="mr-3 h-5 w-5 shrink-0" />
-                    Cerrar sesión
-                  </button>
+                  <>
+                    <SyncMenuButton
+                      variant="mobile"
+                      onDone={() => setOpen(false)}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="mt-1 flex w-full items-center rounded-lg px-4 py-3.5 text-base font-medium text-blanco-linea transition-colors hover:bg-gris-estadio active:bg-gris-estadio"
+                    >
+                      <LogOut className="mr-3 h-5 w-5 shrink-0" />
+                      Cerrar sesión
+                    </button>
+                  </>
                 ) : (
                   <Link
                     href="/auth/login"
