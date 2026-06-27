@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { runResultsSync } from "@/lib/run-sync";
 
+export const maxDuration = 60;
+
 export async function POST() {
   const supabase = await createClient();
   const {
@@ -13,12 +15,11 @@ export async function POST() {
   }
 
   try {
-    const { sync, points } = await runResultsSync();
+    const { sync } = await runResultsSync();
 
     return NextResponse.json({
       ok: true,
       sync,
-      points,
     });
   } catch (error) {
     console.error("sync error:", error);

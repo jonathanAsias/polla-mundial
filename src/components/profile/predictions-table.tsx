@@ -1,4 +1,5 @@
 import { ClipboardList } from "lucide-react";
+import { formatMatchDate } from "@/lib/match-datetime";
 import type { PredictionWithMatch } from "@/lib/queries/profile";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -110,11 +111,7 @@ export function PredictionsTable({ predictions }: PredictionsTableProps) {
                   )}
                   {m && (
                     <p className="mt-1 text-xs text-blanco-linea/40">
-                      {new Date(m.scheduled_at).toLocaleDateString("es", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      {formatMatchDate(m.scheduled_at)}
                     </p>
                   )}
                 </td>

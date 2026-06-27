@@ -10,6 +10,7 @@ import { PredictionForm } from "@/components/match/prediction-form";
 import { ScoreboardDigit } from "@/components/match/scoreboard-digit";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { PointsConfetti } from "@/components/match/points-confetti";
+import { formatMatchDateTime } from "@/lib/match-datetime";
 
 interface MatchCardProps {
   match: MatchWithTeams;
@@ -28,13 +29,7 @@ export function MatchCard({ match, prediction: initialPrediction }: MatchCardPro
   const isFinished = match.status === "finished";
   const isLive = match.status === "live";
 
-  const matchTime = new Date(match.scheduled_at).toLocaleString("es", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const matchTime = formatMatchDateTime(match.scheduled_at);
 
   const showRealScore =
     isFinished &&

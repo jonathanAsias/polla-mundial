@@ -1,3 +1,4 @@
+import { formatMatchDateTime } from "@/lib/match-datetime";
 import type { MatchWithTeams } from "@/lib/queries/matches";
 import { getMatchTeams } from "@/lib/match-display";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -14,13 +15,7 @@ interface MatchRowProps {
 
 export function MatchRow({ match }: MatchRowProps) {
   const { home, away, isKnockoutPlaceholder } = getMatchTeams(match);
-  const date = new Date(match.scheduled_at);
-  const timeStr = date.toLocaleString("es", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeStr = formatMatchDateTime(match.scheduled_at);
 
   const hasScore =
     match.status === "finished" &&

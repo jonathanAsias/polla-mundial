@@ -84,8 +84,8 @@ export const MATCHES: SeedMatch[] = [
   { external_id: 68, home: "CRO", away: "GHA", phase: "group", scheduled_at: "2026-06-27T21:00:00Z", venue: "Lincoln Financial Field", city: "Filadelfia" },
   { external_id: 69, home: "ALG", away: "AUT", phase: "group", scheduled_at: "2026-06-28T02:00:00Z", venue: "Arrowhead Stadium", city: "Kansas City" },
   { external_id: 70, home: "JOR", away: "ARG", phase: "group", scheduled_at: "2026-06-28T02:00:00Z", venue: "AT&T Stadium", city: "Dallas" },
-  { external_id: 71, home: "COL", away: "POR", phase: "group", scheduled_at: "2026-06-28T23:30:00Z", venue: "Hard Rock Stadium", city: "Miami" },
-  { external_id: 72, home: "COD", away: "UZB", phase: "group", scheduled_at: "2026-06-28T23:30:00Z", venue: "Mercedes-Benz Stadium", city: "Atlanta" },
+  { external_id: 71, home: "COL", away: "POR", phase: "group", scheduled_at: "2026-06-27T23:30:00Z", venue: "Hard Rock Stadium", city: "Miami" },
+  { external_id: 72, home: "COD", away: "UZB", phase: "group", scheduled_at: "2026-06-27T23:30:00Z", venue: "Mercedes-Benz Stadium", city: "Atlanta" },
 
   // Eliminatoria (32 partidos)
   { external_id: 73, home: "TBD", away: "TBD", phase: "r32", scheduled_at: "2026-06-28T19:00:00Z", venue: "SoFi Stadium", city: "Los Angeles", label: "2º Grupo A vs 2º Grupo B" },

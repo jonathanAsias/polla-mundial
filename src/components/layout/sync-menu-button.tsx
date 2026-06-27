@@ -33,7 +33,8 @@ export function SyncMenuButton({
       }
 
       const synced = data.sync?.synced ?? 0;
-      const predictionsUpdated = data.points?.predictionsUpdated ?? 0;
+      const schedulesUpdated = data.sync?.schedulesUpdated ?? 0;
+      const predictionsUpdated = data.sync?.pointsCalculated ?? 0;
       const fixturesFound = data.sync?.fixturesFound ?? 0;
       const unmatched = data.sync?.unmatched ?? 0;
 
@@ -57,8 +58,8 @@ export function SyncMenuButton({
       }
 
       toast.success(
-        synced > 0 || predictionsUpdated > 0
-          ? `Sincronizado: ${synced} partido${synced === 1 ? "" : "s"} actualizado${synced === 1 ? "" : "s"}, ${predictionsUpdated} predicción${predictionsUpdated === 1 ? "" : "es"} recalculada${predictionsUpdated === 1 ? "" : "es"}`
+        synced > 0 || schedulesUpdated > 0 || predictionsUpdated > 0
+          ? `Sincronizado: ${schedulesUpdated} horario${schedulesUpdated === 1 ? "" : "s"}, ${synced} resultado${synced === 1 ? "" : "s"}, ${predictionsUpdated} predicción${predictionsUpdated === 1 ? "" : "es"} recalculada${predictionsUpdated === 1 ? "" : "s"}`
           : "Todo al día — no había cambios pendientes"
       );
 

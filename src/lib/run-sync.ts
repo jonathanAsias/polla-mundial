@@ -1,9 +1,7 @@
 import { syncMatchResults } from "@/lib/matches-sync";
-import { settleAllFinishedMatches } from "@/lib/points-service";
 
+/** Sincroniza resultados y horarios FIFA; recalcula puntos solo de partidos actualizados. */
 export async function runResultsSync() {
   const sync = await syncMatchResults();
-  const points = await settleAllFinishedMatches();
-
-  return { sync, points };
+  return { sync };
 }
