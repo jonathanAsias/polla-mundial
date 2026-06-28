@@ -13,6 +13,7 @@ import { getRanking } from "@/lib/queries/ranking";
 import { ResultsSyncBadge } from "@/components/layout/results-sync-badge";
 import { createClient } from "@/lib/supabase/server";
 import { getResultsSyncStatus } from "@/lib/sync-meta";
+import { formatFifaCalendarDay } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,8 @@ export default async function DashboardPage() {
     user.id,
     matches.map((m) => m.id)
   );
+
+  const fifaDay = formatFifaCalendarDay();
 
   return (
     <>
@@ -73,8 +76,8 @@ export default async function DashboardPage() {
               JORNADA DE HOY
             </h2>
             <p className="mb-4 text-sm text-blanco-linea/50">
-              Horario de referencia: Ciudad de México. Las predicciones cierran
-              10 minutos antes de cada partido.
+              Jornada del calendario FIFA: {fifaDay}. Horarios en Ciudad de
+              México. Las predicciones cierran 10 minutos antes de cada partido.
             </p>
 
             {matches.length === 0 ? (

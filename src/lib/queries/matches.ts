@@ -1,5 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import type { MatchPhase, MatchStatus } from "@/types/database";
+
+export interface MatchTeamWithGroup {
+  id: number;
+  name: string;
+  code: string;
+  flag_emoji: string | null;
+  group_name: string | null;
+}
+
 export interface MatchWithTeams {
   id: number;
   phase: MatchPhase;
@@ -10,8 +19,8 @@ export interface MatchWithTeams {
   external_id: number | null;
   venue: string | null;
   city: string | null;
-  home_team: { id: number; name: string; code: string; flag_emoji: string | null };
-  away_team: { id: number; name: string; code: string; flag_emoji: string | null };
+  home_team: MatchTeamWithGroup;
+  away_team: MatchTeamWithGroup;
 }
 
 export async function getMatchesByPhase(phase: MatchPhase) {
@@ -21,8 +30,8 @@ export async function getMatchesByPhase(phase: MatchPhase) {
     .select(
       `
       id, phase, scheduled_at, home_score, away_score, status, external_id, venue, city,
-      home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji),
-      away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji)
+      home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji, group_name),
+      away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji, group_name)
     `
     )
     .eq("phase", phase)
@@ -39,8 +48,8 @@ export async function getAllMatches() {
     .select(
       `
       id, phase, scheduled_at, home_score, away_score, status, external_id, venue, city,
-      home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji),
-      away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji)
+      home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji, group_name),
+      away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji, group_name)
     `
     )
     .order("scheduled_at", { ascending: true });

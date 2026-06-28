@@ -1,5 +1,8 @@
 const DEFAULT_TIMEZONE = "America/Mexico_City";
 
+/** Fechas del calendario FIFA en seed (horarios UTC). */
+const FIFA_CALENDAR_TIMEZONE = "UTC";
+
 export function getDayBoundsInTimezone(
   timeZone = DEFAULT_TIMEZONE,
   referenceDate = new Date()
@@ -93,4 +96,16 @@ export function formatCalendarDayInTimezone(
   }).format(date);
 }
 
-export { DEFAULT_TIMEZONE };
+/** Límites del día según calendario FIFA (UTC). */
+export function getFifaCalendarDayBounds(referenceDate = new Date()): {
+  start: Date;
+  end: Date;
+} {
+  return getDayBoundsInTimezone(FIFA_CALENDAR_TIMEZONE, referenceDate);
+}
+
+export function formatFifaCalendarDay(referenceDate = new Date()): string {
+  return formatCalendarDayInTimezone(referenceDate, FIFA_CALENDAR_TIMEZONE);
+}
+
+export { DEFAULT_TIMEZONE, FIFA_CALENDAR_TIMEZONE };

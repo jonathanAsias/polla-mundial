@@ -2,35 +2,35 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchWithTeams } from "@/lib/queries/matches";
 import type { Prediction } from "@/types/database";
-import { getDayBoundsInTimezone, DEFAULT_TIMEZONE } from "@/lib/timezone";
+import {
+  getFifaCalendarDayBounds,
+  DEFAULT_TIMEZONE,
+} from "@/lib/timezone";
 import { getPredictionDeadline, isPredictionLocked } from "@/lib/predictions";
 
 const MATCH_SELECT = `
   id, phase, scheduled_at, home_score, away_score, status, external_id, venue, city,
-  home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji),
-  away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji)
+  home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji, group_name),
+  away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji, group_name)
 `;
 
 export async function getTodayJornadaMatches(
-  timeZone = DEFAULT_TIMEZONE,
+  _timeZone = DEFAULT_TIMEZONE,
   supabaseClient?: SupabaseClient
 ): Promise<MatchWithTeams[]> {
   const supabase = supabaseClient ?? (await createClient());
-  const { start, end } = getDayBoundsInTimezone(timeZone);
+  const { start, end } = getFifaCalendarDayBounds();
 
   const { data, error } = await supabase
     .from("matches")
     .select(MATCH_SELECT)
     .gte("scheduled_at", start.toISOString())
     .lte("scheduled_at", end.toISOString())
-    .in("status", ["upcoming", "live"])
     .order("scheduled_at", { ascending: true });
 
   if (error) throw error;
 
-  return ((data ?? []) as unknown as MatchWithTeams[]).filter(
-    (m) => m.home_team.code !== "TBD" && m.away_team.code !== "TBD"
-  );
+  return (data ?? []) as unknown as MatchWithTeams[];
 }
 
 /** @deprecated Use getTodayJornadaMatches */
@@ -68,15 +68,18 @@ export async function getMatchRemindersForUser(
 ): Promise<MatchReminder[]> {
   const supabase = supabaseClient ?? (await createClient());
   const matches = await getTodayJornadaMatches(timeZone, supabase);
-  if (matches.length === 0) return [];
+  const predictable = matches.filter(
+    (m) => m.home_team.code !== "TBD" && m.away_team.code !== "TBD"
+  );
+  if (predictable.length === 0) return [];
 
   const predictions = await getUserPredictionsForMatches(
     userId,
-    matches.map((m) => m.id),
+    predictable.map((m) => m.id),
     supabase
   );
 
-  return matches.map((match) => ({
+  return predictable.map((match) => ({
     matchId: match.id,
     homeTeam: match.home_team.name,
     awayTeam: match.away_team.name,

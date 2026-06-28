@@ -1,9 +1,24 @@
 import { KNOCKOUT_LABELS } from "@/data/matches";
+import type { MatchPhase } from "@/types/database";
+
+const PHASE_LABELS: Record<MatchPhase, string> = {
+  group: "Fase de grupos",
+  r32: "32avos de final",
+  r16: "Octavos de final",
+  qf: "Cuartos de final",
+  sf: "Semifinal",
+  final: "Final",
+};
+
+export function formatPhaseLabel(phase: MatchPhase): string {
+  return PHASE_LABELS[phase] ?? phase;
+}
 
 export interface MatchTeamInfo {
   code: string;
   name: string;
   flag_emoji: string | null;
+  group_name?: string | null;
 }
 
 export interface MatchDisplayInput {
@@ -48,6 +63,15 @@ export function getMatchTeams(match: MatchDisplayInput): {
     away: parts[1] ?? "Por definir",
     isKnockoutPlaceholder: true,
   };
+}
+
+export function getMatchGroupLabel(match: {
+  phase: string;
+  home_team: MatchTeamInfo;
+  away_team: MatchTeamInfo;
+}): string | null {
+  if (match.phase !== "group") return null;
+  return match.home_team.group_name ?? match.away_team.group_name ?? null;
 }
 
 /** @deprecated Usar getMatchTeams */

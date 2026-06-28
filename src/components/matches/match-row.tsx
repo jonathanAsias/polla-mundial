@@ -1,6 +1,6 @@
 import { formatMatchDateTime } from "@/lib/match-datetime";
 import type { MatchWithTeams } from "@/lib/queries/matches";
-import { getMatchTeams } from "@/lib/match-display";
+import { getMatchGroupLabel, getMatchTeams, formatPhaseLabel } from "@/lib/match-display";
 import { TeamFlag } from "@/components/teams/team-flag";
 
 const STATUS_ICON: Record<string, string> = {
@@ -15,6 +15,7 @@ interface MatchRowProps {
 
 export function MatchRow({ match }: MatchRowProps) {
   const { home, away, isKnockoutPlaceholder } = getMatchTeams(match);
+  const groupLabel = getMatchGroupLabel(match);
   const timeStr = formatMatchDateTime(match.scheduled_at);
 
   const hasScore =
@@ -55,6 +56,9 @@ export function MatchRow({ match }: MatchRowProps) {
           </div>
         )}
         <p className="mt-1 text-xs text-blanco-linea/50">
+          {formatPhaseLabel(match.phase)}
+          {groupLabel && ` · ${groupLabel}`}
+          {" · "}
           {timeStr}
           {match.city && ` · ${match.city}`}
           {match.venue && ` · ${match.venue}`}
