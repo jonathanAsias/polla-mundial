@@ -43,6 +43,28 @@ export function getTodayFifaCalendarLabel(): string {
   return formatFifaCalendarDay();
 }
 
+/** Partidos eliminatorios próximos (32avos en adelante) con equipos definidos. */
+export async function getUpcomingKnockoutMatches(
+  supabaseClient?: SupabaseClient
+): Promise<MatchWithTeams[]> {
+  const supabase = supabaseClient ?? (await createClient());
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("matches")
+    .select(MATCH_SELECT)
+    .neq("phase", "group")
+    .in("status", ["upcoming", "live"])
+    .gte("scheduled_at", now)
+    .order("scheduled_at", { ascending: true });
+
+  if (error) throw error;
+
+  return ((data ?? []) as unknown as MatchWithTeams[]).filter(
+    (m) => m.home_team.code !== "TBD" && m.away_team.code !== "TBD"
+  );
+}
+
 /** @deprecated Use getTodayJornadaMatches */
 export async function getDashboardMatches(): Promise<MatchWithTeams[]> {
   const today = await getTodayJornadaMatches();

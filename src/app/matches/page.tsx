@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ResultsSyncBadge } from "@/components/layout/results-sync-badge";
 import { getAllMatches } from "@/lib/queries/matches";
 import { getResultsSyncStatus } from "@/lib/sync-meta";
+import { getActiveTournamentPhase } from "@/lib/tournament-phase";
 
 export default async function MatchesPage() {
   const [matches, syncStatus] = await Promise.all([
@@ -35,7 +36,10 @@ export default async function MatchesPage() {
           />
         ) : (
           <div className="mt-8">
-            <MatchesClient matches={matches} />
+            <MatchesClient
+              matches={matches}
+              defaultPhase={getActiveTournamentPhase()}
+            />
           </div>
         )}
       </main>

@@ -5,13 +5,17 @@ import type { MatchPhase } from "@/types/database";
 import type { MatchWithTeams } from "@/lib/queries/matches";
 import { PhaseTabs } from "@/components/matches/phase-tabs";
 import { MatchRow } from "@/components/matches/match-row";
+import { getActiveTournamentPhase } from "@/lib/tournament-phase";
 
 interface MatchesClientProps {
   matches: MatchWithTeams[];
+  defaultPhase?: MatchPhase;
 }
 
-export function MatchesClient({ matches }: MatchesClientProps) {
-  const [phase, setPhase] = useState<MatchPhase>("group");
+export function MatchesClient({ matches, defaultPhase }: MatchesClientProps) {
+  const [phase, setPhase] = useState<MatchPhase>(
+    defaultPhase ?? getActiveTournamentPhase()
+  );
 
   const filtered = matches.filter((m) => m.phase === phase);
 

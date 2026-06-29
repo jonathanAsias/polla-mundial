@@ -8,6 +8,7 @@ import { MatchNotificationManager } from "@/components/dashboard/match-notificat
 import {
   getTodayJornadaMatches,
   getTodayFifaCalendarLabel,
+  getUpcomingKnockoutMatches,
   getUserPredictionsForMatches,
 } from "@/lib/queries/dashboard";
 import { getRanking } from "@/lib/queries/ranking";
@@ -16,6 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getResultsSyncStatus } from "@/lib/sync-meta";
 import { runResultsSync } from "@/lib/run-sync";
 import { getTournamentCalendarDay } from "@/lib/timezone";
+import { getActiveTournamentPhase } from "@/lib/tournament-phase";
 
 export const dynamic = "force-dynamic";
 
@@ -45,11 +47,21 @@ export default async function DashboardPage() {
     matches = await getTodayJornadaMatches();
   }
 
+  const knockoutMatches =
+    getActiveTournamentPhase() !== "group"
+      ? await getUpcomingKnockoutMatches()
+      : [];
+
+  const todayIds = new Set(matches.map((m) => m.id));
+  const extraKnockout = knockoutMatches.filter((m) => !todayIds.has(m.id));
+
+  const allMatchIds = [
+    ...matches.map((m) => m.id),
+    ...extraKnockout.map((m) => m.id),
+  ];
+
   const profile = profileRes.data;
-  const predictions = await getUserPredictionsForMatches(
-    user.id,
-    matches.map((m) => m.id)
-  );
+  const predictions = await getUserPredictionsForMatches(user.id, allMatchIds);
 
   const fifaDay = getTodayFifaCalendarLabel();
 
@@ -105,6 +117,27 @@ export default async function DashboardPage() {
               </div>
             )}
           </section>
+
+          {extraKnockout.length > 0 && (
+            <section className="mt-12">
+              <h2 className="mb-4 font-display text-2xl text-blanco-linea">
+                ELIMINATORIA — PRÓXIMOS PARTIDOS
+              </h2>
+              <p className="mb-4 text-sm text-blanco-linea/50">
+                32avos de final y fases siguientes. Predicciones abiertas hasta
+                10 minutos antes de cada partido.
+              </p>
+              <div className="space-y-6">
+                {extraKnockout.map((match) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    prediction={predictions[match.id]}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
         </DashboardRankingArea>
       </main>
     </>
