@@ -6,27 +6,32 @@ import {
   settleDayJornadaPoints,
 } from "@/lib/points-service";
 import { sendDailyPushReminders } from "@/lib/push-service";
-import { getPreviousCalendarDayInTimezone } from "@/lib/timezone";
+import { getTournamentCalendarDay } from "@/lib/timezone";
 
 /**
- * Cron diario (medianoche Ciudad de México):
- * 1. Sincroniza resultados desde API-Football
- * 2. Cierra jornada: predicciones vs resultados finales del día
- * 3. Recalcula todos los partidos finalizados (respaldo)
- * 4. Recordatorios push de la nueva jornada
+ * Cron cada 3 h durante el torneo:
+ * 1. Sincroniza calendario y resultados desde API-Football (día FIFA actual)
+ * 2. Cierra jornada anterior (puntos)
+ * 3. Recalcula partidos finalizados
+ * 4. Recordatorios push
  */
 export async function GET(request: Request) {
   const authError = verifyCronAuth(request);
   if (authError) return authError;
+
+  if (!getTournamentCalendarDay()) {
+    return NextResponse.json({ ok: true, skipped: "Fuera del torneo" });
+  }
 
   try {
     const sync = await syncMatchResults().catch((e) => ({
       error: e instanceof Error ? e.message : "sync failed",
     }));
 
-    const jornada = await settleDayJornadaPoints(
-      getPreviousCalendarDayInTimezone()
-    ).catch((e) => ({
+    const yesterday = new Date();
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+
+    const jornada = await settleDayJornadaPoints(yesterday).catch((e) => ({
       error: e instanceof Error ? e.message : "settle jornada failed",
     }));
 

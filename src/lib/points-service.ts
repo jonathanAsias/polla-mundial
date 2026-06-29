@@ -2,10 +2,10 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { calculateMatchPoints } from "@/lib/points";
 import {
   DEFAULT_TIMEZONE,
-  formatCalendarDayInTimezone,
-  getDayBoundsInTimezone,
+  formatFifaCalendarDay,
   getPreviousCalendarDayInTimezone,
 } from "@/lib/timezone";
+import { getExternalIdsForFifaDay } from "@/data/fifa-match-days";
 
 export async function calculatePointsForMatch(matchId: number) {
   const supabase = createServiceClient();
@@ -98,17 +98,25 @@ export async function recalculateUserTotalPoints(userId: string) {
  */
 export async function settleDayJornadaPoints(
   dayDate: Date = getPreviousCalendarDayInTimezone(),
-  timeZone = DEFAULT_TIMEZONE
+  _timeZone = DEFAULT_TIMEZONE
 ) {
   const supabase = createServiceClient();
-  const { start, end } = getDayBoundsInTimezone(timeZone, dayDate);
-  const dayLabel = formatCalendarDayInTimezone(dayDate, timeZone);
+  const dayLabel = formatFifaCalendarDay(dayDate);
+  const externalIds = getExternalIdsForFifaDay(dayLabel);
+
+  if (externalIds.length === 0) {
+    return {
+      day: dayLabel,
+      matchesProcessed: 0,
+      predictionsUpdated: 0,
+      matchIds: [] as number[],
+    };
+  }
 
   const { data: matches, error } = await supabase
     .from("matches")
     .select("id, external_id, home_score, away_score")
-    .gte("scheduled_at", start.toISOString())
-    .lte("scheduled_at", end.toISOString())
+    .in("external_id", externalIds)
     .eq("status", "finished")
     .not("home_score", "is", null)
     .not("away_score", "is", null);

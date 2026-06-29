@@ -108,4 +108,11 @@ export function formatFifaCalendarDay(referenceDate = new Date()): string {
   return formatCalendarDayInTimezone(referenceDate, FIFA_CALENDAR_TIMEZONE);
 }
 
+/** Fecha calendario del torneo (YYYY-MM-DD) o null fuera del Mundial. */
+export function getTournamentCalendarDay(referenceDate = new Date()): string | null {
+  const day = formatFifaCalendarDay(referenceDate);
+  if (day < "2026-06-11" || day > "2026-07-19") return null;
+  return day;
+}
+
 export { DEFAULT_TIMEZONE, FIFA_CALENDAR_TIMEZONE };

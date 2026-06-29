@@ -129,7 +129,7 @@ INSERT INTO matches (home_team_id, away_team_id, phase, scheduled_at, venue, cit
   ((SELECT id FROM teams WHERE code='JOR'), (SELECT id FROM teams WHERE code='ARG'), 'group', '2026-06-28T02:00:00Z', 'AT&T Stadium', 'Dallas', 70, 'upcoming'),
   ((SELECT id FROM teams WHERE code='COL'), (SELECT id FROM teams WHERE code='POR'), 'group', '2026-06-27T23:30:00Z', 'Hard Rock Stadium', 'Miami', 71, 'upcoming'),
   ((SELECT id FROM teams WHERE code='COD'), (SELECT id FROM teams WHERE code='UZB'), 'group', '2026-06-27T23:30:00Z', 'Mercedes-Benz Stadium', 'Atlanta', 72, 'upcoming'),
-  ((SELECT id FROM teams WHERE code='TBD'), (SELECT id FROM teams WHERE code='TBD'), 'r32', '2026-06-28T19:00:00Z', 'SoFi Stadium', 'Los Angeles', 73, 'upcoming'),
+  ((SELECT id FROM teams WHERE code='RSA'), (SELECT id FROM teams WHERE code='CAN'), 'r32', '2026-06-28T19:00:00Z', 'SoFi Stadium', 'Los Angeles', 73, 'upcoming'),
   ((SELECT id FROM teams WHERE code='TBD'), (SELECT id FROM teams WHERE code='TBD'), 'r32', '2026-06-29T20:30:00Z', 'Gillette Stadium', 'Boston', 74, 'upcoming'),
   ((SELECT id FROM teams WHERE code='TBD'), (SELECT id FROM teams WHERE code='TBD'), 'r32', '2026-06-30T01:00:00Z', 'Estadio BBVA', 'Monterrey', 75, 'upcoming'),
   ((SELECT id FROM teams WHERE code='TBD'), (SELECT id FROM teams WHERE code='TBD'), 'r32', '2026-06-29T16:00:00Z', 'NRG Stadium', 'Houston', 76, 'upcoming'),

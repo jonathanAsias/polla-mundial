@@ -88,7 +88,7 @@ export const MATCHES: SeedMatch[] = [
   { external_id: 72, home: "COD", away: "UZB", phase: "group", scheduled_at: "2026-06-27T23:30:00Z", venue: "Mercedes-Benz Stadium", city: "Atlanta" },
 
   // Eliminatoria (32 partidos)
-  { external_id: 73, home: "TBD", away: "TBD", phase: "r32", scheduled_at: "2026-06-28T19:00:00Z", venue: "SoFi Stadium", city: "Los Angeles", label: "2º Grupo A vs 2º Grupo B" },
+  { external_id: 73, home: "RSA", away: "CAN", phase: "r32", scheduled_at: "2026-06-28T19:00:00Z", venue: "SoFi Stadium", city: "Los Angeles", label: "Sudáfrica vs Canadá" },
   { external_id: 74, home: "TBD", away: "TBD", phase: "r32", scheduled_at: "2026-06-29T20:30:00Z", venue: "Gillette Stadium", city: "Boston", label: "1º Grupo E vs 3º A/B/C/D/F" },
   { external_id: 75, home: "TBD", away: "TBD", phase: "r32", scheduled_at: "2026-06-30T01:00:00Z", venue: "Estadio BBVA", city: "Monterrey", label: "1º Grupo F vs 2º Grupo C" },
   { external_id: 76, home: "TBD", away: "TBD", phase: "r32", scheduled_at: "2026-06-29T16:00:00Z", venue: "NRG Stadium", city: "Houston", label: "1º Grupo C vs 2º Grupo F" },

@@ -9,8 +9,13 @@ import { calculatePointsForMatch } from "@/lib/points-service";
 import { recordResultsSync, touchMatchResultsUpdated } from "@/lib/sync-meta";
 import { apiTeamNameToCode } from "@/lib/team-api-aliases";
 import {
-  DEFAULT_TIMEZONE,
-  formatCalendarDayInTimezone,
+  getExternalIdsForFifaDay,
+  getFifaMatchDay,
+  isTournamentCalendarDay,
+} from "@/data/fifa-match-days";
+import {
+  formatFifaCalendarDay,
+  getTournamentCalendarDay,
 } from "@/lib/timezone";
 
 interface DbMatch {
@@ -22,15 +27,26 @@ interface DbMatch {
   away_team: { code: string; external_id: number | null };
 }
 
-const SYNC_WINDOW_DAYS = 3;
-const MAX_API_DATES = 5;
 const API_CONCURRENCY = 3;
 
 export async function syncMatchResults() {
   const supabase = createServiceClient();
-  const now = new Date();
-  const windowStart = new Date(now.getTime() - SYNC_WINDOW_DAYS * 86400000);
-  const windowEnd = new Date(now.getTime() + SYNC_WINDOW_DAYS * 86400000);
+  const tournamentDay = getTournamentCalendarDay();
+
+  if (!tournamentDay) {
+    return {
+      synced: 0,
+      schedulesUpdated: 0,
+      pointsCalculated: 0,
+      pending: 0,
+      fixturesFound: 0,
+      calendarDay: null,
+    };
+  }
+
+  const fetchDates = collectTournamentFetchDates(tournamentDay);
+  const dayExternalIds = fetchDates.flatMap((d) => getExternalIdsForFifaDay(d));
+  const uniqueExternalIds = Array.from(new Set(dayExternalIds));
 
   const { data: dbMatches, error } = await supabase
     .from("matches")
@@ -41,14 +57,11 @@ export async function syncMatchResults() {
       away_team:teams!matches_away_team_id_fkey(code, external_id)
     `
     )
-    .gte("scheduled_at", windowStart.toISOString())
-    .lte("scheduled_at", windowEnd.toISOString());
+    .in("external_id", uniqueExternalIds);
 
   if (error) throw error;
 
-  const matches = ((dbMatches ?? []) as unknown as DbMatch[]).filter(
-    (m) => m.home_team.code !== "TBD" && m.away_team.code !== "TBD"
-  );
+  const matches = (dbMatches ?? []) as unknown as DbMatch[];
 
   if (matches.length === 0) {
     return {
@@ -57,10 +70,10 @@ export async function syncMatchResults() {
       pointsCalculated: 0,
       pending: 0,
       fixturesFound: 0,
+      calendarDay: tournamentDay,
     };
   }
 
-  const fetchDates = collectFetchDates(matches, now);
   let apiFixtures: ApiFootballFixture[] = [];
 
   try {
@@ -73,6 +86,7 @@ export async function syncMatchResults() {
       pointsCalculated: 0,
       pending: matches.length,
       fixturesFound: 0,
+      calendarDay: tournamentDay,
       error: String(e),
     };
   }
@@ -152,17 +166,29 @@ export async function syncMatchResults() {
     pending: matches.length,
     fixturesFound: apiFixtures.length,
     unmatched,
-    datesFetched: fetchDates.length,
+    datesFetched: fetchDates,
+    calendarDay: tournamentDay,
   };
 }
 
-function collectFetchDates(_matches: DbMatch[], reference: Date): string[] {
-  const dates: string[] = [];
-  for (const offset of [-1, 0, 1]) {
-    const d = new Date(reference.getTime() + offset * 86400000);
-    dates.push(formatCalendarDayInTimezone(d, DEFAULT_TIMEZONE));
-  }
-  return dates.slice(0, MAX_API_DATES);
+/** Días calendario FIFA a consultar: ayer, hoy y mañana del torneo. */
+function collectTournamentFetchDates(tournamentDay: string): string[] {
+  const dates = new Set<string>([tournamentDay]);
+
+  const prev = shiftCalendarDay(tournamentDay, -1);
+  const next = shiftCalendarDay(tournamentDay, 1);
+
+  if (prev && isTournamentCalendarDay(prev)) dates.add(prev);
+  if (next && isTournamentCalendarDay(next)) dates.add(next);
+
+  return Array.from(dates).sort();
+}
+
+function shiftCalendarDay(day: string, offset: number): string | null {
+  const [year, month, date] = day.split("-").map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, date));
+  utc.setUTCDate(utc.getUTCDate() + offset);
+  return formatFifaCalendarDay(utc);
 }
 
 async function fetchWorldCupFixturesParallel(
@@ -188,6 +214,20 @@ function findMatchingFixture(
   match: DbMatch,
   fixtures: ApiFootballFixture[]
 ): ApiFootballFixture | undefined {
+  if (match.external_id) {
+    const fifaDay = getFifaMatchDay(match.external_id);
+    const dayFixtures =
+      fifaDay != null
+        ? fixtures.filter((f) => {
+            const kickoffDay = formatFifaCalendarDay(new Date(f.fixture.date));
+            return kickoffDay === fifaDay || isSameTeams(match, f);
+          })
+        : fixtures;
+
+    const byTeams = dayFixtures.find((f) => isSameTeams(match, f));
+    if (byTeams) return byTeams;
+  }
+
   if (match.home_team.external_id && match.away_team.external_id) {
     const byTeamId = fixtures.find(
       (f) =>
@@ -197,12 +237,15 @@ function findMatchingFixture(
     if (byTeamId) return byTeamId;
   }
 
+  return fixtures.find((f) => isSameTeams(match, f));
+}
+
+function isSameTeams(match: DbMatch, fixture: ApiFootballFixture): boolean {
   const homeCode = match.home_team.code;
   const awayCode = match.away_team.code;
+  if (homeCode === "TBD" || awayCode === "TBD") return false;
 
-  return fixtures.find((f) => {
-    const fHome = apiTeamNameToCode(f.teams.home.name);
-    const fAway = apiTeamNameToCode(f.teams.away.name);
-    return fHome === homeCode && fAway === awayCode;
-  });
+  const fHome = apiTeamNameToCode(fixture.teams.home.name);
+  const fAway = apiTeamNameToCode(fixture.teams.away.name);
+  return fHome === homeCode && fAway === awayCode;
 }

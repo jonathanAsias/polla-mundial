@@ -2,8 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchWithTeams } from "@/lib/queries/matches";
 import type { Prediction } from "@/types/database";
+import { getExternalIdsForFifaDay } from "@/data/fifa-match-days";
 import {
-  getFifaCalendarDayBounds,
+  formatFifaCalendarDay,
+  getTournamentCalendarDay,
   DEFAULT_TIMEZONE,
 } from "@/lib/timezone";
 import { getPredictionDeadline, isPredictionLocked } from "@/lib/predictions";
@@ -19,18 +21,26 @@ export async function getTodayJornadaMatches(
   supabaseClient?: SupabaseClient
 ): Promise<MatchWithTeams[]> {
   const supabase = supabaseClient ?? (await createClient());
-  const { start, end } = getFifaCalendarDayBounds();
+  const tournamentDay = getTournamentCalendarDay();
+
+  if (!tournamentDay) return [];
+
+  const externalIds = getExternalIdsForFifaDay(tournamentDay);
+  if (externalIds.length === 0) return [];
 
   const { data, error } = await supabase
     .from("matches")
     .select(MATCH_SELECT)
-    .gte("scheduled_at", start.toISOString())
-    .lte("scheduled_at", end.toISOString())
+    .in("external_id", externalIds)
     .order("scheduled_at", { ascending: true });
 
   if (error) throw error;
 
   return (data ?? []) as unknown as MatchWithTeams[];
+}
+
+export function getTodayFifaCalendarLabel(): string {
+  return formatFifaCalendarDay();
 }
 
 /** @deprecated Use getTodayJornadaMatches */

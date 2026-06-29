@@ -7,13 +7,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { MatchNotificationManager } from "@/components/dashboard/match-notification-manager";
 import {
   getTodayJornadaMatches,
+  getTodayFifaCalendarLabel,
   getUserPredictionsForMatches,
 } from "@/lib/queries/dashboard";
 import { getRanking } from "@/lib/queries/ranking";
 import { ResultsSyncBadge } from "@/components/layout/results-sync-badge";
 import { createClient } from "@/lib/supabase/server";
 import { getResultsSyncStatus } from "@/lib/sync-meta";
-import { formatFifaCalendarDay } from "@/lib/timezone";
+import { runResultsSync } from "@/lib/run-sync";
+import { getTournamentCalendarDay } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -27,16 +29,21 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  const [profileRes, matches, ranking, syncStatus] = await Promise.all([
+  const [profileRes, ranking, syncStatus] = await Promise.all([
     supabase
       .from("profiles")
       .select("username, total_points")
       .eq("id", user.id)
       .single<{ username: string; total_points: number }>(),
-    getTodayJornadaMatches(),
     getRanking(10),
     getResultsSyncStatus(),
   ]);
+
+  let matches = await getTodayJornadaMatches();
+  if (matches.length === 0 && getTournamentCalendarDay()) {
+    await runResultsSync().catch(() => {});
+    matches = await getTodayJornadaMatches();
+  }
 
   const profile = profileRes.data;
   const predictions = await getUserPredictionsForMatches(
@@ -44,7 +51,7 @@ export default async function DashboardPage() {
     matches.map((m) => m.id)
   );
 
-  const fifaDay = formatFifaCalendarDay();
+  const fifaDay = getTodayFifaCalendarLabel();
 
   return (
     <>
