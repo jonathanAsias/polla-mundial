@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getUserPredictionsForRanking } from "@/lib/queries/ranking";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: Request,
   { params }: { params: { userId: string } }

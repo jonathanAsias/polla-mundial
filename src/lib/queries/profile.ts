@@ -20,7 +20,7 @@ export interface PredictionWithMatch {
     phase: string;
     home_team: { name: string; code: string };
     away_team: { name: string; code: string };
-  };
+  } | null;
 }
 
 export interface PointsChartPoint {
@@ -62,8 +62,10 @@ export async function getUserPredictionsHistory(
     .eq("user_id", userId);
 
   if (error) throw error;
+
+  const rows = (data ?? []) as unknown as PredictionWithMatch[];
   return sortPredictionsByMatchSchedule(
-    (data ?? []) as unknown as PredictionWithMatch[]
+    rows.filter((row) => row.match != null)
   );
 }
 
@@ -73,22 +75,23 @@ export function buildPointsChart(
   const finished = predictions
     .filter(
       (p) =>
-        p.match?.status === "finished" &&
+        p.match != null &&
+        p.match.status === "finished" &&
         p.points_earned > 0 &&
         p.match.scheduled_at
     )
     .sort(
       (a, b) =>
-        new Date(a.match.scheduled_at).getTime() -
-        new Date(b.match.scheduled_at).getTime()
+        new Date(a.match!.scheduled_at).getTime() -
+        new Date(b.match!.scheduled_at).getTime()
     );
 
   let cumulative = 0;
   return finished.map((p) => {
     cumulative += p.points_earned;
-    const d = new Date(p.match.scheduled_at);
+    const d = new Date(p.match!.scheduled_at);
     return {
-      date: p.match.scheduled_at,
+      date: p.match!.scheduled_at,
       label: d.toLocaleDateString("es", { day: "numeric", month: "short" }),
       earned: p.points_earned,
       cumulative,

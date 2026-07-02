@@ -69,7 +69,9 @@ export async function getUserPredictionsForRanking(
     .eq("user_id", userId);
 
   if (error) throw error;
+
+  const rows = (data ?? []) as unknown as PredictionWithMatch[];
   return sortPredictionsByMatchSchedule(
-    (data ?? []) as unknown as PredictionWithMatch[]
+    rows.filter((row) => row.match != null)
   );
 }

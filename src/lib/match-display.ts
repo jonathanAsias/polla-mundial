@@ -81,9 +81,17 @@ export interface MatchResultInput {
   home_penalties?: number | null;
   away_penalties?: number | null;
   status?: string;
+  home_team?: { name: string };
+  away_team?: { name: string };
 }
 
-/** Marcador para mostrar; incluye penales si aplica (p. ej. 1-1 (4-3 pen.)). */
+function getPenaltyWinnerName(match: MatchResultInput): string | null {
+  if (match.winner_side === "home") return match.home_team?.name ?? null;
+  if (match.winner_side === "away") return match.away_team?.name ?? null;
+  return null;
+}
+
+/** Marcador para mostrar; incluye penales y ganador si aplica. */
 export function formatMatchResult(match: MatchResultInput): string | null {
   if (
     match.status !== "finished" ||
@@ -94,20 +102,25 @@ export function formatMatchResult(match: MatchResultInput): string | null {
   }
 
   const base = `${match.home_score} - ${match.away_score}`;
+  const winnerName = getPenaltyWinnerName(match);
+  const hasPenaltyScores =
+    match.home_penalties != null && match.away_penalties != null;
+  const decidedOnPenalties =
+    Boolean(match.winner_side) &&
+    (match.home_score === match.away_score || hasPenaltyScores);
 
-  if (
-    match.home_penalties !== null &&
-    match.home_penalties !== undefined &&
-    match.away_penalties !== null &&
-    match.away_penalties !== undefined
-  ) {
-    return `${base} (${match.home_penalties}-${match.away_penalties} pen.)`;
+  if (hasPenaltyScores) {
+    const pen = `${match.home_penalties}-${match.away_penalties}`;
+    return winnerName
+      ? `${base} (${pen} pen. — gana ${winnerName})`
+      : `${base} (${pen} pen.)`;
   }
 
-  if (
-    match.winner_side &&
-    match.home_score === match.away_score
-  ) {
+  if (decidedOnPenalties && winnerName) {
+    return `${base} (gana ${winnerName} en penales)`;
+  }
+
+  if (decidedOnPenalties) {
     return `${base} (pen.)`;
   }
 
