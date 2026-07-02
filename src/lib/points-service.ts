@@ -99,8 +99,9 @@ export async function recalculateUserTotalPoints(userId: string) {
  */
 export async function settleDayJornadaPoints(
   dayDate: Date = getPreviousCalendarDayInTimezone(),
-  _timeZone = DEFAULT_TIMEZONE
+  timeZone = DEFAULT_TIMEZONE
 ) {
+  void timeZone;
   const supabase = createServiceClient();
   const dayLabel = formatFifaCalendarDay(dayDate);
   const externalIds = getExternalIdsForFifaDay(dayLabel);

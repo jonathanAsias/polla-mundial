@@ -17,9 +17,10 @@ const MATCH_SELECT = `
 `;
 
 export async function getTodayJornadaMatches(
-  _timeZone = DEFAULT_TIMEZONE,
+  timeZone = DEFAULT_TIMEZONE,
   supabaseClient?: SupabaseClient
 ): Promise<MatchWithTeams[]> {
+  void timeZone;
   const supabase = supabaseClient ?? (await createClient());
   const tournamentDay = getTournamentCalendarDay();
 

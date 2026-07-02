@@ -1,7 +1,7 @@
--- Migración completa: mostrar partidos definidos por penales en perfiles y ranking
--- Ejecutar en Supabase SQL Editor (una sola vez)
+-- Partidos definidos por penales: Alemania vs Paraguay (#74) y Países Bajos vs Marruecos (#75)
+-- Ejecutar en Supabase SQL Editor
 
--- 1. Columnas necesarias
+-- Columnas (si aún no existen)
 ALTER TABLE public.matches
   ADD COLUMN IF NOT EXISTS winner_side TEXT CHECK (winner_side IN ('home', 'away'));
 
@@ -12,7 +12,7 @@ ALTER TABLE public.matches
 ALTER TABLE public.matches
   ADD COLUMN IF NOT EXISTS fixture_status_short TEXT;
 
--- 2. Resultados conocidos por penales (32avos, junio 2026)
+-- #74 Alemania 1-1 Paraguay (3-4 pen.) — gana Paraguay
 UPDATE public.matches
 SET
   home_score = 1,
@@ -24,6 +24,7 @@ SET
   fixture_status_short = 'PEN'
 WHERE external_id = 74;
 
+-- #75 Países Bajos 1-1 Marruecos (2-3 pen.) — gana Marruecos
 UPDATE public.matches
 SET
   home_score = 1,
@@ -35,14 +36,44 @@ SET
   fixture_status_short = 'PEN'
 WHERE external_id = 75;
 
--- 3. Cualquier empate en eliminatoria sin metadatos = penales
-UPDATE public.matches
-SET fixture_status_short = COALESCE(fixture_status_short, 'PEN')
-WHERE status = 'finished'
-  AND phase <> 'group'
-  AND home_score IS NOT NULL
-  AND home_score = away_score
-  AND fixture_status_short IS NULL;
+-- Recalcular puntos: 1 pt si acertó ganador (Paraguay / Marruecos), 2 pts si marcador exacto 1-1
+UPDATE public.predictions p
+SET points_earned = (
+  CASE
+    WHEN p.predicted_home = m.home_score AND p.predicted_away = m.away_score THEN 2
+    ELSE 0
+  END
+  +
+  CASE
+    WHEN m.winner_side = 'home' AND p.predicted_home > p.predicted_away THEN 1
+    WHEN m.winner_side = 'away' AND p.predicted_away > p.predicted_home THEN 1
+    ELSE 0
+  END
+)
+FROM public.matches m
+WHERE p.match_id = m.id
+  AND m.external_id IN (74, 75);
 
--- 4. Recalcular puntos tras actualizar winner_side (opcional; la app también lo hace al sincronizar)
--- UPDATE predictions p SET points_earned = ...  -- mejor usar "Sincronizar" en la app
+-- Actualizar totales en ranking
+UPDATE public.profiles pr
+SET total_points = COALESCE(
+  (SELECT SUM(points_earned) FROM public.predictions WHERE user_id = pr.id),
+  0
+);
+
+-- Verificación
+SELECT
+  m.external_id,
+  ht.code AS home,
+  at.code AS away,
+  m.home_score,
+  m.away_score,
+  m.home_penalties,
+  m.away_penalties,
+  m.winner_side,
+  m.fixture_status_short,
+  m.status
+FROM public.matches m
+JOIN public.teams ht ON ht.id = m.home_team_id
+JOIN public.teams at ON at.id = m.away_team_id
+WHERE m.external_id IN (74, 75);
