@@ -12,7 +12,7 @@ export async function calculatePointsForMatch(matchId: number) {
 
   const { data: match, error: matchError } = await supabase
     .from("matches")
-    .select("id, home_score, away_score, status")
+    .select("id, home_score, away_score, winner_side, status")
     .eq("id", matchId)
     .single();
 
@@ -43,7 +43,8 @@ export async function calculatePointsForMatch(matchId: number) {
       pred.predicted_home,
       pred.predicted_away,
       match.home_score,
-      match.away_score
+      match.away_score,
+      match.winner_side
     );
 
     const { error: updateError } = await supabase

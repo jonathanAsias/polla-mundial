@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   fetchFixturesByDate,
+  getFixtureWinnerSide,
   isWorldCupFixture,
   parseFixtureStatus,
   type ApiFootballFixture,
@@ -107,6 +108,7 @@ export async function syncMatchResults() {
     const status = parseFixtureStatus(fixture.fixture.status.short);
     const homeScore = fixture.goals.home;
     const awayScore = fixture.goals.away;
+    const winnerSide = getFixtureWinnerSide(fixture);
     const apiKickoff = new Date(fixture.fixture.date).toISOString();
     const kickoffChanged = apiKickoff !== new Date(match.scheduled_at).toISOString();
 
@@ -123,10 +125,15 @@ export async function syncMatchResults() {
       update.away_score = awayScore;
     }
 
+    if (status === "finished") {
+      update.winner_side = winnerSide;
+    }
+
     const hasResultUpdate =
       status !== "upcoming" &&
       (match.status !== status ||
         homeScore !== null ||
+        winnerSide !== null ||
         kickoffChanged);
 
     if (!kickoffChanged && !hasResultUpdate) continue;

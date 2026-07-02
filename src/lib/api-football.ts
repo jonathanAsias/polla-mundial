@@ -13,8 +13,8 @@ export interface ApiFootballFixture {
     season: number;
   };
   teams: {
-    home: { id: number; name: string };
-    away: { id: number; name: string };
+    home: { id: number; name: string; winner?: boolean | null };
+    away: { id: number; name: string; winner?: boolean | null };
   };
   goals: {
     home: number | null;
@@ -32,6 +32,14 @@ function mapStatus(short: string): "upcoming" | "live" | "finished" {
 
 export function parseFixtureStatus(short: string) {
   return mapStatus(short);
+}
+
+export function getFixtureWinnerSide(
+  fixture: ApiFootballFixture
+): "home" | "away" | null {
+  if (fixture.teams.home.winner === true) return "home";
+  if (fixture.teams.away.winner === true) return "away";
+  return null;
 }
 
 export async function fetchFixturesByDate(

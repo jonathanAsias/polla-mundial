@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS public.matches (
   scheduled_at    TIMESTAMPTZ NOT NULL,
   home_score      INT,
   away_score      INT,
+  winner_side     TEXT CHECK (winner_side IN ('home', 'away')),
   status          TEXT NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'live', 'finished')),
   external_id     INT UNIQUE,
   venue           TEXT,

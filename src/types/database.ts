@@ -8,6 +8,8 @@ export type MatchPhase =
 
 export type MatchStatus = "upcoming" | "live" | "finished";
 
+export type MatchWinnerSide = "home" | "away";
+
 export interface Profile {
   id: string;
   username: string;
@@ -34,6 +36,7 @@ export interface Match {
   scheduled_at: string;
   home_score: number | null;
   away_score: number | null;
+  winner_side: MatchWinnerSide | null;
   status: MatchStatus;
   external_id: number | null;
   venue: string | null;
