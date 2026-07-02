@@ -1,15 +1,20 @@
 import { ClipboardList } from "lucide-react";
 import { formatMatchDate } from "@/lib/match-datetime";
-import { formatMatchResult } from "@/lib/match-display";
+import { formatMatchResult, isDecidedByPenalties } from "@/lib/match-display";
 import type { PredictionWithMatch } from "@/lib/queries/profile";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { EmptyState } from "@/components/ui/empty-state";
 
 interface PredictionsTableProps {
   predictions: PredictionWithMatch[];
+  /** Etiqueta de la columna de predicción (p. ej. al ver otro usuario). */
+  predictionColumnLabel?: string;
 }
 
-export function PredictionsTable({ predictions }: PredictionsTableProps) {
+export function PredictionsTable({
+  predictions,
+  predictionColumnLabel = "Tu predicción",
+}: PredictionsTableProps) {
   if (predictions.length === 0) {
     return (
       <EmptyState
@@ -58,6 +63,11 @@ export function PredictionsTable({ predictions }: PredictionsTableProps) {
                   <p className="mt-1 font-mono text-blanco-linea">
                     {resultLabel ?? "—"}
                   </p>
+                  {m && resultLabel && isDecidedByPenalties(m) && (
+                    <p className="mt-0.5 text-[10px] uppercase tracking-wide text-dorado-copa/80">
+                      Penales
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-blanco-linea/50">Pts</p>
@@ -82,7 +92,7 @@ export function PredictionsTable({ predictions }: PredictionsTableProps) {
           <thead>
             <tr className="border-b border-dorado-copa/15 bg-gris-estadio/80 text-left text-xs uppercase tracking-wide text-blanco-linea/50">
               <th className="px-4 py-3">Partido</th>
-              <th className="px-4 py-3 text-center">Tu predicción</th>
+              <th className="px-4 py-3 text-center">{predictionColumnLabel}</th>
               <th className="px-4 py-3 text-center">Resultado</th>
               <th className="px-4 py-3 text-right">Pts</th>
             </tr>
@@ -120,7 +130,14 @@ export function PredictionsTable({ predictions }: PredictionsTableProps) {
                   </td>
                   <td className="px-4 py-3 text-center font-mono">
                     {resultLabel ? (
-                      <span className="text-blanco-linea">{resultLabel}</span>
+                      <div className="space-y-1">
+                        <span className="text-blanco-linea">{resultLabel}</span>
+                        {m && isDecidedByPenalties(m) && (
+                          <p className="text-[10px] uppercase tracking-wide text-dorado-copa/80">
+                            Definido por penales
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-blanco-linea/40">Pendiente</span>
                     )}

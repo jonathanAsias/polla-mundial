@@ -5,6 +5,9 @@ import { ResultsSyncBadge } from "@/components/layout/results-sync-badge";
 import { createClient } from "@/lib/supabase/server";
 import { getResultsSyncStatus } from "@/lib/sync-meta";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function RankingPage() {
   const supabase = await createClient();
   const {

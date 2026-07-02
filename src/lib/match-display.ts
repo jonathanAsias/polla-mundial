@@ -84,6 +84,7 @@ export interface MatchResultInput {
   fixture_status_short?: string | null;
   status?: string;
   phase?: MatchPhase | string;
+  external_id?: number | null;
   home_team?: { name: string };
   away_team?: { name: string };
 }
@@ -105,7 +106,9 @@ export function isDecidedByPenalties(match: MatchResultInput): boolean {
     match.home_score != null &&
     match.away_score != null &&
     match.home_score === match.away_score;
-  const knockout = match.phase != null && match.phase !== "group";
+  const knockout =
+    (match.phase != null && match.phase !== "group") ||
+    (match.external_id != null && match.external_id >= 73);
 
   return Boolean(
     match.status === "finished" &&

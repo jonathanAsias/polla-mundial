@@ -20,9 +20,10 @@ export function useRankingUserPredictions(currentUserId?: string) {
       setSelected(entry);
       setLoading(true);
       try {
-        const res = await fetch(`/api/ranking/${entry.id}/predictions`, {
-          cache: "no-store",
-        });
+        const res = await fetch(
+          `/api/ranking/${entry.id}/predictions?_=${Date.now()}`,
+          { cache: "no-store" }
+        );
         const data = await res.json();
         if (res.ok) {
           setPredictions(data.predictions ?? []);

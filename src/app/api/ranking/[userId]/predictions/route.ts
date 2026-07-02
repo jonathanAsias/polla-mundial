@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getUserPredictionsForRanking } from "@/lib/queries/ranking";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(
   _request: Request,
@@ -15,7 +16,14 @@ export async function GET(
 
   try {
     const predictions = await getUserPredictionsForRanking(userId);
-    return NextResponse.json({ predictions });
+    return NextResponse.json(
+      { predictions },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Error" },

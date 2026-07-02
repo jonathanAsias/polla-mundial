@@ -52,7 +52,10 @@ export function UserPredictionsPanel({
       {loading ? (
         <p className="text-sm text-blanco-linea/50">Cargando...</p>
       ) : (
-        <PredictionsTable predictions={predictions} />
+        <PredictionsTable
+          predictions={predictions}
+          predictionColumnLabel="Predicción"
+        />
       )}
     </section>
   );

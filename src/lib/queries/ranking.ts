@@ -48,29 +48,47 @@ export async function getRanking(limit = 100): Promise<RankingEntry[]> {
   }));
 }
 
+const PREDICTIONS_WITH_MATCH_SELECT = `
+  id, predicted_home, predicted_away, points_earned, submitted_at,
+  match:matches(
+    id, external_id, scheduled_at, home_score, away_score, winner_side,
+    home_penalties, away_penalties, fixture_status_short, status, phase,
+    home_team:teams!matches_home_team_id_fkey(name, code),
+    away_team:teams!matches_away_team_id_fkey(name, code)
+  )
+`;
+
+const PREDICTIONS_WITH_MATCH_SELECT_LEGACY = `
+  id, predicted_home, predicted_away, points_earned, submitted_at,
+  match:matches(
+    id, external_id, scheduled_at, home_score, away_score, winner_side,
+    home_penalties, away_penalties, status, phase,
+    home_team:teams!matches_home_team_id_fkey(name, code),
+    away_team:teams!matches_away_team_id_fkey(name, code)
+  )
+`;
+
 export async function getUserPredictionsForRanking(
   userId: string
 ): Promise<PredictionWithMatch[]> {
   const supabase = createServiceClient();
 
-  const { data, error } = await supabase
+  const primary = await supabase
     .from("predictions")
-    .select(
-      `
-      id, predicted_home, predicted_away, points_earned, submitted_at,
-      match:matches(
-        id, scheduled_at, home_score, away_score, winner_side,
-        home_penalties, away_penalties, fixture_status_short, status, phase,
-        home_team:teams!matches_home_team_id_fkey(name, code),
-        away_team:teams!matches_away_team_id_fkey(name, code)
-      )
-    `
-    )
+    .select(PREDICTIONS_WITH_MATCH_SELECT)
     .eq("user_id", userId);
 
-  if (error) throw error;
+  const result =
+    primary.error?.message?.includes("fixture_status_short")
+      ? await supabase
+          .from("predictions")
+          .select(PREDICTIONS_WITH_MATCH_SELECT_LEGACY)
+          .eq("user_id", userId)
+      : primary;
+
+  if (result.error) throw result.error;
 
   return sortPredictionsByMatchSchedule(
-    normalizePredictionRows((data ?? []) as unknown as PredictionWithMatch[])
+    normalizePredictionRows((result.data ?? []) as unknown as PredictionWithMatch[])
   );
 }
