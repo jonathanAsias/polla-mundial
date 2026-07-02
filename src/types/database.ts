@@ -37,6 +37,8 @@ export interface Match {
   home_score: number | null;
   away_score: number | null;
   winner_side: MatchWinnerSide | null;
+  home_penalties: number | null;
+  away_penalties: number | null;
   status: MatchStatus;
   external_id: number | null;
   venue: string | null;

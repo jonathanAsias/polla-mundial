@@ -74,6 +74,46 @@ export function getMatchGroupLabel(match: {
   return match.home_team.group_name ?? match.away_team.group_name ?? null;
 }
 
+export interface MatchResultInput {
+  home_score: number | null;
+  away_score: number | null;
+  winner_side?: "home" | "away" | null;
+  home_penalties?: number | null;
+  away_penalties?: number | null;
+  status?: string;
+}
+
+/** Marcador para mostrar; incluye penales si aplica (p. ej. 1-1 (4-3 pen.)). */
+export function formatMatchResult(match: MatchResultInput): string | null {
+  if (
+    match.status !== "finished" ||
+    match.home_score === null ||
+    match.away_score === null
+  ) {
+    return null;
+  }
+
+  const base = `${match.home_score} - ${match.away_score}`;
+
+  if (
+    match.home_penalties !== null &&
+    match.home_penalties !== undefined &&
+    match.away_penalties !== null &&
+    match.away_penalties !== undefined
+  ) {
+    return `${base} (${match.home_penalties}-${match.away_penalties} pen.)`;
+  }
+
+  if (
+    match.winner_side &&
+    match.home_score === match.away_score
+  ) {
+    return `${base} (pen.)`;
+  }
+
+  return base;
+}
+
 /** @deprecated Usar getMatchTeams */
 export function getMatchDisplayName(match: MatchDisplayInput): {
   home: string;

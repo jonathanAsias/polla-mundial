@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   fetchFixturesByDate,
+  getFixturePenaltyScores,
   getFixtureWinnerSide,
   isWorldCupFixture,
   parseFixtureStatus,
@@ -109,6 +110,7 @@ export async function syncMatchResults() {
     const homeScore = fixture.goals.home;
     const awayScore = fixture.goals.away;
     const winnerSide = getFixtureWinnerSide(fixture);
+    const penaltyScores = getFixturePenaltyScores(fixture);
     const apiKickoff = new Date(fixture.fixture.date).toISOString();
     const kickoffChanged = apiKickoff !== new Date(match.scheduled_at).toISOString();
 
@@ -127,6 +129,13 @@ export async function syncMatchResults() {
 
     if (status === "finished") {
       update.winner_side = winnerSide;
+      if (penaltyScores.home !== null && penaltyScores.away !== null) {
+        update.home_penalties = penaltyScores.home;
+        update.away_penalties = penaltyScores.away;
+      } else {
+        update.home_penalties = null;
+        update.away_penalties = null;
+      }
     }
 
     const hasResultUpdate =
@@ -134,6 +143,7 @@ export async function syncMatchResults() {
       (match.status !== status ||
         homeScore !== null ||
         winnerSide !== null ||
+        penaltyScores.home !== null ||
         kickoffChanged);
 
     if (!kickoffChanged && !hasResultUpdate) continue;

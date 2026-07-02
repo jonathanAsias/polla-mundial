@@ -20,6 +20,12 @@ export interface ApiFootballFixture {
     home: number | null;
     away: number | null;
   };
+  score?: {
+    penalty?: {
+      home: number | null;
+      away: number | null;
+    };
+  };
 }
 
 function mapStatus(short: string): "upcoming" | "live" | "finished" {
@@ -40,6 +46,16 @@ export function getFixtureWinnerSide(
   if (fixture.teams.home.winner === true) return "home";
   if (fixture.teams.away.winner === true) return "away";
   return null;
+}
+
+export function getFixturePenaltyScores(fixture: ApiFootballFixture): {
+  home: number | null;
+  away: number | null;
+} {
+  return {
+    home: fixture.score?.penalty?.home ?? null,
+    away: fixture.score?.penalty?.away ?? null,
+  };
 }
 
 export async function fetchFixturesByDate(
