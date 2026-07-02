@@ -1,10 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   fetchFixturesByDate,
-  getFixturePenaltyScores,
-  getFixtureWinnerSide,
   isWorldCupFixture,
-  parseFixtureStatus,
   type ApiFootballFixture,
 } from "@/lib/api-football";
 import { calculatePointsForMatch } from "@/lib/points-service";
@@ -15,6 +12,7 @@ import {
   getFifaMatchDay,
   isTournamentCalendarDay,
 } from "@/data/fifa-match-days";
+import { buildFixtureResultMetadata } from "@/lib/fixture-metadata";
 import {
   formatFifaCalendarDay,
   getTournamentCalendarDay,
@@ -25,13 +23,53 @@ interface DbMatch {
   external_id: number | null;
   scheduled_at: string;
   status: string;
+  home_score: number | null;
+  away_score: number | null;
+  winner_side: string | null;
+  home_penalties: number | null;
+  away_penalties: number | null;
+  fixture_status_short: string | null;
   home_team: { code: string; external_id: number | null };
   away_team: { code: string; external_id: number | null };
 }
 
 const API_CONCURRENCY = 3;
 
+const MATCH_SELECT = `
+  id, external_id, scheduled_at, status, home_score, away_score,
+  winner_side, home_penalties, away_penalties, fixture_status_short,
+  home_team:teams!matches_home_team_id_fkey(code, external_id),
+  away_team:teams!matches_away_team_id_fkey(code, external_id)
+`;
+
 export async function syncMatchResults() {
+  const window = await syncMatchesWindow();
+  const backfill = await backfillFinishedMatchesFromApi();
+
+  const pointsResults = await Promise.all(
+    backfill.recalculatedMatchIds.map((matchId) =>
+      calculatePointsForMatch(matchId)
+    )
+  );
+  const backfillPoints = pointsResults.reduce((sum, r) => sum + r.updated, 0);
+
+  if (
+    window.synced > 0 ||
+    window.schedulesUpdated > 0 ||
+    backfill.updated > 0
+  ) {
+    await recordResultsSync("API-Football");
+  }
+
+  return {
+    ...window,
+    pointsCalculated: window.pointsCalculated + backfillPoints,
+    backfillUpdated: backfill.updated,
+    backfillFixtures: backfill.fixturesFound,
+  };
+}
+
+async function syncMatchesWindow() {
   const supabase = createServiceClient();
   const tournamentDay = getTournamentCalendarDay();
 
@@ -52,13 +90,7 @@ export async function syncMatchResults() {
 
   const { data: dbMatches, error } = await supabase
     .from("matches")
-    .select(
-      `
-      id, external_id, scheduled_at, status,
-      home_team:teams!matches_home_team_id_fkey(code, external_id),
-      away_team:teams!matches_away_team_id_fkey(code, external_id)
-    `
-    )
+    .select(MATCH_SELECT)
     .in("external_id", uniqueExternalIds);
 
   if (error) throw error;
@@ -93,6 +125,104 @@ export async function syncMatchResults() {
     };
   }
 
+  return applyFixturesToMatches(matches, apiFixtures, tournamentDay);
+}
+
+/** Repuebla metadatos de TODOS los partidos finalizados (penales, ganador). */
+export async function backfillFinishedMatchesFromApi() {
+  const supabase = createServiceClient();
+
+  const { data: dbMatches, error } = await supabase
+    .from("matches")
+    .select(MATCH_SELECT)
+    .eq("status", "finished");
+
+  if (error) throw error;
+
+  const matches = (dbMatches ?? []) as unknown as DbMatch[];
+  if (matches.length === 0) {
+    return { updated: 0, fixturesFound: 0, recalculatedMatchIds: [] as number[] };
+  }
+
+  const fetchDates = Array.from(
+    new Set(
+      matches
+        .map((m) => (m.external_id ? getFifaMatchDay(m.external_id) : null))
+        .filter((d): d is string => Boolean(d))
+    )
+  ).sort();
+
+  let apiFixtures: ApiFootballFixture[] = [];
+  try {
+    apiFixtures = await fetchWorldCupFixturesParallel(fetchDates);
+  } catch (e) {
+    console.warn("Backfill API-Football no disponible:", e);
+    return { updated: 0, fixturesFound: 0, recalculatedMatchIds: [] as number[] };
+  }
+
+  let updated = 0;
+  const recalculatedMatchIds: number[] = [];
+
+  for (const match of matches) {
+    const fixture = findMatchingFixture(match, apiFixtures);
+    if (!fixture) continue;
+
+    const metadata = buildFixtureResultMetadata(fixture);
+    if (metadata.status !== "finished") continue;
+
+    const changed = matchNeedsMetadataUpdate(match, metadata);
+    if (!changed) continue;
+
+    const { error: updateError } = await supabase
+      .from("matches")
+      .update({
+        home_score: metadata.home_score,
+        away_score: metadata.away_score,
+        status: metadata.status,
+        winner_side: metadata.winner_side,
+        home_penalties: metadata.home_penalties,
+        away_penalties: metadata.away_penalties,
+        fixture_status_short: metadata.fixture_status_short,
+      })
+      .eq("id", match.id);
+
+    if (updateError) {
+      console.warn(`Backfill partido ${match.id}:`, updateError.message);
+      continue;
+    }
+
+    updated++;
+    recalculatedMatchIds.push(match.id);
+    await touchMatchResultsUpdated(match.id);
+  }
+
+  return {
+    updated,
+    fixturesFound: apiFixtures.length,
+    recalculatedMatchIds,
+  };
+}
+
+function matchNeedsMetadataUpdate(
+  match: DbMatch,
+  metadata: ReturnType<typeof buildFixtureResultMetadata>
+): boolean {
+  return (
+    match.winner_side !== metadata.winner_side ||
+    match.home_penalties !== metadata.home_penalties ||
+    match.away_penalties !== metadata.away_penalties ||
+    match.fixture_status_short !== metadata.fixture_status_short ||
+    match.home_score !== metadata.home_score ||
+    match.away_score !== metadata.away_score
+  );
+}
+
+async function applyFixturesToMatches(
+  matches: DbMatch[],
+  apiFixtures: ApiFootballFixture[],
+  calendarDay: string | null
+) {
+  const supabase = createServiceClient();
   let synced = 0;
   let schedulesUpdated = 0;
   let pointsCalculated = 0;
@@ -106,45 +236,34 @@ export async function syncMatchResults() {
       continue;
     }
 
-    const status = parseFixtureStatus(fixture.fixture.status.short);
-    const homeScore = fixture.goals.home;
-    const awayScore = fixture.goals.away;
-    const winnerSide = getFixtureWinnerSide(fixture);
-    const penaltyScores = getFixturePenaltyScores(fixture);
+    const metadata = buildFixtureResultMetadata(fixture);
     const apiKickoff = new Date(fixture.fixture.date).toISOString();
     const kickoffChanged = apiKickoff !== new Date(match.scheduled_at).toISOString();
 
     const update: Record<string, unknown> = { scheduled_at: apiKickoff };
 
-    if (status !== "upcoming") {
-      update.status = status;
+    if (metadata.status !== "upcoming") {
+      update.status = metadata.status;
     } else if (match.status === "upcoming") {
       update.status = "upcoming";
     }
 
-    if (homeScore !== null && awayScore !== null) {
-      update.home_score = homeScore;
-      update.away_score = awayScore;
+    if (metadata.home_score !== null && metadata.away_score !== null) {
+      update.home_score = metadata.home_score;
+      update.away_score = metadata.away_score;
     }
 
-    if (status === "finished") {
-      update.winner_side = winnerSide;
-      if (penaltyScores.home !== null && penaltyScores.away !== null) {
-        update.home_penalties = penaltyScores.home;
-        update.away_penalties = penaltyScores.away;
-      } else {
-        update.home_penalties = null;
-        update.away_penalties = null;
-      }
+    if (metadata.status === "finished") {
+      update.winner_side = metadata.winner_side;
+      update.home_penalties = metadata.home_penalties;
+      update.away_penalties = metadata.away_penalties;
+      update.fixture_status_short = metadata.fixture_status_short;
     }
 
+    const metadataChanged = matchNeedsMetadataUpdate(match, metadata);
     const hasResultUpdate =
-      status !== "upcoming" &&
-      (match.status !== status ||
-        homeScore !== null ||
-        winnerSide !== null ||
-        penaltyScores.home !== null ||
-        kickoffChanged);
+      metadata.status !== "upcoming" &&
+      (match.status !== metadata.status || metadataChanged || kickoffChanged);
 
     if (!kickoffChanged && !hasResultUpdate) continue;
 
@@ -158,11 +277,19 @@ export async function syncMatchResults() {
     if (kickoffChanged) schedulesUpdated++;
     if (hasResultUpdate) synced++;
 
-    if (homeScore !== null && awayScore !== null && status !== "upcoming") {
+    if (
+      metadata.home_score !== null &&
+      metadata.away_score !== null &&
+      metadata.status !== "upcoming"
+    ) {
       await touchMatchResultsUpdated(match.id);
     }
 
-    if (status === "finished" && homeScore !== null && awayScore !== null) {
+    if (
+      metadata.status === "finished" &&
+      metadata.home_score !== null &&
+      metadata.away_score !== null
+    ) {
       finishedMatchIds.push(match.id);
     }
   }
@@ -172,10 +299,6 @@ export async function syncMatchResults() {
   );
   pointsCalculated = pointsResults.reduce((sum, r) => sum + r.updated, 0);
 
-  if (synced > 0 || schedulesUpdated > 0) {
-    await recordResultsSync("API-Football");
-  }
-
   return {
     synced,
     schedulesUpdated,
@@ -183,12 +306,11 @@ export async function syncMatchResults() {
     pending: matches.length,
     fixturesFound: apiFixtures.length,
     unmatched,
-    datesFetched: fetchDates,
-    calendarDay: tournamentDay,
+    datesFetched: [],
+    calendarDay,
   };
 }
 
-/** Días calendario FIFA a consultar: ayer, hoy y mañana del torneo. */
 function collectTournamentFetchDates(tournamentDay: string): string[] {
   const dates = new Set<string>([tournamentDay]);
 

@@ -1,4 +1,5 @@
 import { KNOCKOUT_LABELS } from "@/data/matches";
+import { isPenaltyShootoutStatus } from "@/lib/fixture-metadata";
 import type { MatchPhase } from "@/types/database";
 
 const PHASE_LABELS: Record<MatchPhase, string> = {
@@ -80,7 +81,9 @@ export interface MatchResultInput {
   winner_side?: "home" | "away" | null;
   home_penalties?: number | null;
   away_penalties?: number | null;
+  fixture_status_short?: string | null;
   status?: string;
+  phase?: MatchPhase | string;
   home_team?: { name: string };
   away_team?: { name: string };
 }
@@ -89,6 +92,26 @@ function getPenaltyWinnerName(match: MatchResultInput): string | null {
   if (match.winner_side === "home") return match.home_team?.name ?? null;
   if (match.winner_side === "away") return match.away_team?.name ?? null;
   return null;
+}
+
+export function isDecidedByPenalties(match: MatchResultInput): boolean {
+  if (isPenaltyShootoutStatus(match.fixture_status_short)) return true;
+
+  const hasPenaltyScores =
+    match.home_penalties != null && match.away_penalties != null;
+  if (hasPenaltyScores) return true;
+
+  const tied =
+    match.home_score != null &&
+    match.away_score != null &&
+    match.home_score === match.away_score;
+  const knockout = match.phase != null && match.phase !== "group";
+
+  return Boolean(
+    match.status === "finished" &&
+      tied &&
+      (knockout || Boolean(match.winner_side))
+  );
 }
 
 /** Marcador para mostrar; incluye penales y ganador si aplica. */
@@ -105,9 +128,11 @@ export function formatMatchResult(match: MatchResultInput): string | null {
   const winnerName = getPenaltyWinnerName(match);
   const hasPenaltyScores =
     match.home_penalties != null && match.away_penalties != null;
-  const decidedOnPenalties =
-    Boolean(match.winner_side) &&
-    (match.home_score === match.away_score || hasPenaltyScores);
+  const byPenalties = isDecidedByPenalties(match);
+
+  if (!byPenalties) {
+    return base;
+  }
 
   if (hasPenaltyScores) {
     const pen = `${match.home_penalties}-${match.away_penalties}`;
@@ -116,15 +141,11 @@ export function formatMatchResult(match: MatchResultInput): string | null {
       : `${base} (${pen} pen.)`;
   }
 
-  if (decidedOnPenalties && winnerName) {
+  if (winnerName) {
     return `${base} (gana ${winnerName} en penales)`;
   }
 
-  if (decidedOnPenalties) {
-    return `${base} (pen.)`;
-  }
-
-  return base;
+  return `${base} (penales)`;
 }
 
 /** @deprecated Usar getMatchTeams */

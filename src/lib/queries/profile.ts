@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/types/database";
-import { sortPredictionsByMatchSchedule } from "@/lib/predictions-history";
+import { sortPredictionsByMatchSchedule, normalizePredictionRows } from "@/lib/predictions-history";
 
 export interface PredictionWithMatch {
   id: number;
@@ -16,6 +16,7 @@ export interface PredictionWithMatch {
     winner_side: "home" | "away" | null;
     home_penalties: number | null;
     away_penalties: number | null;
+    fixture_status_short: string | null;
     status: string;
     phase: string;
     home_team: { name: string; code: string };
@@ -53,7 +54,7 @@ export async function getUserPredictionsHistory(
       id, predicted_home, predicted_away, points_earned, submitted_at,
       match:matches(
         id, scheduled_at, home_score, away_score, winner_side,
-        home_penalties, away_penalties, status, phase,
+        home_penalties, away_penalties, fixture_status_short, status, phase,
         home_team:teams!matches_home_team_id_fkey(name, code),
         away_team:teams!matches_away_team_id_fkey(name, code)
       )
@@ -63,9 +64,8 @@ export async function getUserPredictionsHistory(
 
   if (error) throw error;
 
-  const rows = (data ?? []) as unknown as PredictionWithMatch[];
   return sortPredictionsByMatchSchedule(
-    rows.filter((row) => row.match != null)
+    normalizePredictionRows((data ?? []) as unknown as PredictionWithMatch[])
   );
 }
 

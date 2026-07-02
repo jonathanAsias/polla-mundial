@@ -15,3 +15,20 @@ export function sortPredictionsByMatchSchedule(
     return (a.match?.id ?? 0) - (b.match?.id ?? 0);
   });
 }
+
+/** Supabase a veces devuelve relaciones embebidas como arreglo. */
+export function normalizeMatchEmbed<T>(match: T | T[] | null | undefined): T | null {
+  if (match == null) return null;
+  return Array.isArray(match) ? (match[0] ?? null) : match;
+}
+
+export function normalizePredictionRows(
+  rows: Array<PredictionWithMatch & { match?: PredictionWithMatch["match"] | PredictionWithMatch["match"][] }>
+): PredictionWithMatch[] {
+  return rows
+    .map((row) => ({
+      ...row,
+      match: normalizeMatchEmbed(row.match),
+    }))
+    .filter((row): row is PredictionWithMatch => row.match != null);
+}
