@@ -1,5 +1,7 @@
 -- Propaga ganadores de 32avos (y fases previas) a octavos, cuartos, etc.
--- Ejecutar en Supabase SQL Editor cuando los cruces sigan mostrando "Ganador XX vs Ganador YY".
+-- Para cargar resultados oficiales FIFA/Google, ejecutar primero:
+--   supabase/fifa-r16-qf-results.sql
+-- Este script solo propaga desde partidos ya marcados como finished.
 
 WITH advancing AS (
   SELECT
