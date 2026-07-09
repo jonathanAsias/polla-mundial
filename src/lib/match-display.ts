@@ -34,10 +34,10 @@ export function getMatchTeams(match: MatchDisplayInput): {
   away: string;
   isKnockoutPlaceholder: boolean;
 } {
-  const isPlaceholder =
-    match.home_team.code === "TBD" || match.away_team.code === "TBD";
+  const homeKnown = match.home_team.code !== "TBD";
+  const awayKnown = match.away_team.code !== "TBD";
 
-  if (!isPlaceholder) {
+  if (homeKnown && awayKnown) {
     return {
       home: match.home_team.name,
       away: match.away_team.name,
@@ -46,22 +46,22 @@ export function getMatchTeams(match: MatchDisplayInput): {
   }
 
   const label = match.external_id ? KNOCKOUT_LABELS[match.external_id] : null;
-  if (!label) {
-    return {
-      home: "Por definir",
-      away: "",
-      isKnockoutPlaceholder: true,
-    };
+  let placeholderHome = "Por definir";
+  let placeholderAway = "";
+
+  if (label) {
+    if (!label.includes(" vs ")) {
+      placeholderHome = label;
+    } else {
+      const parts = label.split(" vs ");
+      placeholderHome = parts[0] ?? label;
+      placeholderAway = parts[1] ?? "Por definir";
+    }
   }
 
-  if (!label.includes(" vs ")) {
-    return { home: label, away: "", isKnockoutPlaceholder: true };
-  }
-
-  const parts = label.split(" vs ");
   return {
-    home: parts[0] ?? label,
-    away: parts[1] ?? "Por definir",
+    home: homeKnown ? match.home_team.name : placeholderHome,
+    away: awayKnown ? match.away_team.name : placeholderAway,
     isKnockoutPlaceholder: true,
   };
 }

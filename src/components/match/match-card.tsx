@@ -36,7 +36,10 @@ export function MatchCard({ match, prediction: initialPrediction }: MatchCardPro
   const { home, away, isKnockoutPlaceholder } = getMatchTeams(match);
   const groupLabel = getMatchGroupLabel(match);
   const canPredict =
-    !isFinished && !isKnockoutPlaceholder && match.home_team.code !== "TBD";
+    !isFinished &&
+    !isKnockoutPlaceholder &&
+    match.home_team.code !== "TBD" &&
+    match.away_team.code !== "TBD";
 
   const matchTime = formatMatchDateTime(match.scheduled_at);
 

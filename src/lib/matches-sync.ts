@@ -14,6 +14,11 @@ import {
 } from "@/data/fifa-match-days";
 import { buildFixtureResultMetadata } from "@/lib/fixture-metadata";
 import {
+  getKnockoutPropagationUpdates,
+  KNOCKOUT_BRACKET,
+  type MatchForBracket,
+} from "@/lib/knockout-bracket";
+import {
   formatFifaCalendarDay,
   getTournamentCalendarDay,
 } from "@/lib/timezone";
@@ -45,6 +50,7 @@ const MATCH_SELECT = `
 export async function syncMatchResults() {
   const window = await syncMatchesWindow();
   const backfill = await backfillFinishedMatchesFromApi();
+  const knockout = await propagateKnockoutTeamsToDb();
 
   const pointsResults = await Promise.all(
     backfill.recalculatedMatchIds.map((matchId) =>
@@ -56,7 +62,8 @@ export async function syncMatchResults() {
   if (
     window.synced > 0 ||
     window.schedulesUpdated > 0 ||
-    backfill.updated > 0
+    backfill.updated > 0 ||
+    knockout.updated > 0
   ) {
     await recordResultsSync("API-Football");
   }
@@ -66,6 +73,7 @@ export async function syncMatchResults() {
     pointsCalculated: window.pointsCalculated + backfillPoints,
     backfillUpdated: backfill.updated,
     backfillFixtures: backfill.fixturesFound,
+    knockoutTeamsUpdated: knockout.updated,
   };
 }
 
@@ -387,4 +395,58 @@ function isSameTeams(match: DbMatch, fixture: ApiFootballFixture): boolean {
   const fHome = apiTeamNameToCode(fixture.teams.home.name);
   const fAway = apiTeamNameToCode(fixture.teams.away.name);
   return fHome === homeCode && fAway === awayCode;
+}
+
+const KNOCKOUT_FEEDER_SELECT = `
+  id, external_id, status, winner_side, home_score, away_score, home_team_id, away_team_id,
+  home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji, group_name),
+  away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji, group_name)
+`;
+
+/** Actualiza equipos TBD en eliminatoria según ganadores de partidos previos. */
+export async function propagateKnockoutTeamsToDb() {
+  const supabase = createServiceClient();
+  const externalIds = Array.from(
+    new Set(
+      KNOCKOUT_BRACKET.flatMap((entry) => [
+        entry.externalId,
+        entry.home.fromExternalId,
+        entry.away.fromExternalId,
+      ])
+    )
+  );
+
+  const { data, error } = await supabase
+    .from("matches")
+    .select(KNOCKOUT_FEEDER_SELECT)
+    .in("external_id", externalIds);
+
+  if (error) throw error;
+
+  const updates = getKnockoutPropagationUpdates(
+    (data ?? []) as unknown as MatchForBracket[]
+  );
+
+  let updated = 0;
+  for (const update of updates) {
+    const { error: updateError } = await supabase
+      .from("matches")
+      .update({
+        home_team_id: update.homeTeamId,
+        away_team_id: update.awayTeamId,
+      })
+      .eq("id", update.matchId);
+
+    if (updateError) {
+      console.warn(
+        `Knockout partido ${update.externalId}:`,
+        updateError.message
+      );
+      continue;
+    }
+
+    updated++;
+  }
+
+  return { updated };
 }

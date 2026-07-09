@@ -4,6 +4,11 @@ import type { MatchWithTeams } from "@/lib/queries/matches";
 import type { Prediction } from "@/types/database";
 import { getExternalIdsForFifaDay } from "@/data/fifa-match-days";
 import {
+  enrichMatchesWithKnockoutTeams,
+  getFeederExternalIdsForMatches,
+  type MatchForBracket,
+} from "@/lib/knockout-bracket";
+import {
   formatFifaCalendarDay,
   getTournamentCalendarDay,
   DEFAULT_TIMEZONE,
@@ -15,6 +20,33 @@ const MATCH_SELECT = `
   home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji, group_name),
   away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji, group_name)
 `;
+
+const FEEDER_MATCH_SELECT = `
+  id, external_id, status, winner_side, home_score, away_score, home_team_id, away_team_id,
+  home_team:teams!matches_home_team_id_fkey(id, name, code, flag_emoji, group_name),
+  away_team:teams!matches_away_team_id_fkey(id, name, code, flag_emoji, group_name)
+`;
+
+async function enrichMatchesWithResolvedKnockoutTeams(
+  matches: MatchWithTeams[],
+  supabaseClient?: SupabaseClient
+): Promise<MatchWithTeams[]> {
+  const feederIds = getFeederExternalIdsForMatches(matches);
+  if (feederIds.length === 0) return matches;
+
+  const supabase = supabaseClient ?? (await createClient());
+  const { data, error } = await supabase
+    .from("matches")
+    .select(FEEDER_MATCH_SELECT)
+    .in("external_id", feederIds);
+
+  if (error) throw error;
+
+  return enrichMatchesWithKnockoutTeams(
+    matches,
+    (data ?? []) as unknown as MatchForBracket[]
+  );
+}
 
 export async function getTodayJornadaMatches(
   timeZone = DEFAULT_TIMEZONE,
@@ -37,7 +69,8 @@ export async function getTodayJornadaMatches(
 
   if (error) throw error;
 
-  return (data ?? []) as unknown as MatchWithTeams[];
+  const matches = (data ?? []) as unknown as MatchWithTeams[];
+  return enrichMatchesWithResolvedKnockoutTeams(matches, supabase);
 }
 
 export function getTodayFifaCalendarLabel(): string {
@@ -61,7 +94,10 @@ export async function getUpcomingKnockoutMatches(
 
   if (error) throw error;
 
-  return ((data ?? []) as unknown as MatchWithTeams[]).filter(
+  const matches = (data ?? []) as unknown as MatchWithTeams[];
+  const enriched = await enrichMatchesWithResolvedKnockoutTeams(matches, supabase);
+
+  return enriched.filter(
     (m) => m.home_team.code !== "TBD" && m.away_team.code !== "TBD"
   );
 }
